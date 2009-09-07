@@ -1,0 +1,195 @@
+###############################################################################
+# File:         README
+# Author:       Alex Brandt
+# Date:         2009/09/06
+###############################################################################
+
+***********
+* INSTALL *
+***********
+
+This utility is a minimal pascal compiler that should compile to an intermediary
+language appropriate for running in the shazam virtual environment.
+This program was created using Gentoo Linux with a 2.6.30 gentoo sources kernel
+revision 4 on an X86_64 architecture.
+The compiler used for building and testing is gcc version 4.3.2 release 3 in the
+portage tree provided by Gentoo (www.gentoo.org).
+This software is licensed under the GPL as specified in the file COPYING.
+
+Build Instructions:
+
+$cd <path to build directory>
+$cmake <path to source directory>
+$make
+
+If you want this installed to /usr type:
+
+$make install
+
+The executable will be in ${build_dir}/src/compiler.
+
+***********************
+* Program Description *
+***********************
+
+This program utilizes the following:
+  1) STL map
+  2) STL list
+
+****************************
+* Program Input and Output *
+****************************
+
+Input ::
+  Options which are parsed from the CLI as well as a source file to compile.
+
+Ouput ::
+  Outputs the intermediary language file to be executed unless specified to
+  be redirected elsewhere.
+
+  Currently this application only tests the functionality of the symbol table.
+
+  Example:
+    compiler
+    Adding foo, 256, 513, 0 [ok]
+    Adding bar, 256, 513, 0 [ok]
+    Adding rar, 256, 513, 0 [ok]
+
+    Symbol Table:
+    Level: 0
+    bar, 256, 513, 0
+    foo, 256, 513, 0
+    rar, 256, 513, 0
+
+    Adding a lexical scope!
+    Adding farsi, 256, 513, 0 [ok]
+    Adding francais, 256, 513, 0 [ok]
+    Adding deutsch, 256, 513, 0 [ok]
+
+    Symbol Table:
+    Level: 0
+    deutsch, 256, 513, 0
+    farsi, 256, 513, 0
+    francais, 256, 513, 0
+    Level: 1
+    bar, 256, 513, 0
+    foo, 256, 513, 0
+    rar, 256, 513, 0
+
+    Overwriting previous lexical scope values!
+    Adding foo, 256, 513, 0 [ok]
+    Adding bar, 256, 513, 0 [ok]
+    Checking lexical scope values of overwritten and non-overwritten values!
+    Checking local scope:
+    farsi, 256, 513, 0 found at level 0 [ok]
+    Checking previous scope:
+    rar, 256, 513, 0 found at level 1 [ok]
+    Checking overwritten scope:
+    foo, 256, 513, 0 found at level 0 [ok]
+    Removing a lexical scope!
+
+    Symbol Table:
+    Level: 0
+    bar, 256, 513, 0
+    foo, 256, 513, 0
+    rar, 256, 513, 0
+
+******************
+* Program Design *
+******************
+
+The following classes are provided:
+
+SymbolTableEntry ::
+  Specification:  symboltableentry.h
+  Implementation: symboltableentry.cpp
+
+  Description:
+    An entry for a symbol table.  Contains necessary information about
+    symbols for the analyzers to do their jobs.
+
+  Fields:
+    lexeme  - The string of characters representing this token.
+    offset  - The symbols location in memory.
+    value   - The token value from the grammar.
+    type    - The type of the token for semantic analysis.
+
+SymbolTable ::
+  Specification:  symboltable.h
+  Implementation: symboltable.cpp
+
+  Description:
+    An abstract container that handles lexical scoping for a compiler's
+    symbol table.  Behaves similar to a stack for handling scoping and
+    keeps track of all entries entrusted to it.
+
+  Fields:
+    tables  - The list that contains all of the tables for the different scopes.
+
+The following function declarations are utilized:
+
+int main();
+---------------------------------
+  Glossary of Variables:
+    SymbolTable *       symboltable         //!< The symbol table.
+    SymbolTableEntry *  symboltableentry    //!< The entry we are working with.
+    int                 level               //!< An integer for the level return.
+
+    This is the driving function of the program, and calls the following functions:
+
+    void AddLexeme(string lexeme, SymbolTable &symboltable);
+    void FindLexeme(string lexeme, SymbolTable &symboltable);
+
+**************
+* File Index *
+**************
+
+File                        Functions/Purpose           Description
+----                        -----------------           -----------
+
+src/main.cpp                main                        The main function.
+                            AddLexeme                   Add a lexeme to the table.
+                            FindLexeme                  Find a lexeme in the table.
+
+include/symboltable.h       SymbolTable class           Specification of the
+                            declaration.                SymbolTable class.
+
+include/symboltableentry.h  SymbolTableEntry class      Specification of the
+                            declaration.                SymbolTableEntry class.
+
+lib/symboltable.cpp         SymbolTable class           Implementation of the
+                            declaration.                SymbolTable class.
+
+lib/symboltableentry.cpp    SymbolTableEntry class      Implementation of the
+                            declaration.                SymbolTableEntry class.
+
+lib/CmakeLists.txt          cmake file                  Controls the building of
+                                                        these libraries.
+
+src/CMakeLists.txt          cmake file                  Controls the building of
+                                                        this executable.
+
+CMakeLists.txt              cmake file                  Orchestrates the build.
+
+COPYING                     GPL Text                    Full text of the GPL.
+
+README              this file
+
+*******************
+* Program Testing *
+*******************
+
+This program does not perform its fully described functionality yet, but does
+fulfill the initial requirements.  It has a fully functioning (but not necessarily
+error free) implementation of a symbol table.  The next step will be to add the
+lexical analyzer.  The main function of this implementation tests the symbol table
+in a fairly rigorous manner.  Test will be placed in a unit testing library as time
+allows and as errors are found.
+
+**************
+* Known Bugs *
+**************
+
+No currently known issues exist with the application.
+
+If bugs are found please email Alex Brandt <alunduil@alunduil.com> with a bugreport.

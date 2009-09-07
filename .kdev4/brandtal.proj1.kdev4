@@ -1,0 +1,16 @@
+[Buildset]
+Number of Builditems=1
+
+[Buildset][Builditem0]
+Itemname=symboltableentry.cpp
+Itempath=./
+Projectname=brandtal.proj1
+
+[CMake]
+BuildDirs=/home/alunduil/college/csis/435/brandtal.proj1/build
+CMakeDir=/usr/share/cmake/Modules
+Current CMake Binary=file:///usr/bin/cmake
+CurrentBuildDir=file:///home/alunduil/college/csis/435/brandtal.proj1/build
+CurrentBuildType=debug
+CurrentInstallDir=
+ProjectRootRelative=./
