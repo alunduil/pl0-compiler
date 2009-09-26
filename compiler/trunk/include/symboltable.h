@@ -24,10 +24,12 @@
 #include <map>
 #include <list>
 #include <ostream>
-#include <symboltableentry.h>
+#include <token.h>
 
 namespace Environment
 {
+    class SymbolTableEntry;
+
     class SymbolTable
     {
         public:
@@ -83,7 +85,7 @@ namespace Environment
              * it into the table if this is the case.  If the entry exists it will
              * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
              */
-            void Insert(const std::string lexeme, TOKEN_VALUE token = ID);
+            void Insert(const std::string lexeme, TOKEN_VALUE token = IDENTIFIER);
 
             /**
              * @brief Insert the Symbol Table Entry into the table.
@@ -176,7 +178,7 @@ namespace Environment
                     * it into the table if this is the case.  If the entry exists it will
                     * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
                     */
-                    void Insert(const std::string lexeme, TOKEN_VALUE token = ID);
+                    void Insert(const std::string lexeme, TOKEN_VALUE token = IDENTIFIER);
 
                     /**
                     * @brief Insert the Symbol Table Entry into the table.

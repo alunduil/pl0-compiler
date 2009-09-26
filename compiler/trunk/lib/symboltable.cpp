@@ -18,6 +18,7 @@
 */
 
 #include <symboltable.h>
+#include <symboltableentry.h>
 
 namespace Environment
 {

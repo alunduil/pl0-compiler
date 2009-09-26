@@ -22,18 +22,10 @@
 
 #include <string>
 #include <map>
+#include <token.h>
 
 namespace Environment
 {
-    /**
-     * @brief A definition of the different tokens.
-     * @todo Define more of these values.
-     */
-    enum TOKEN_VALUE
-    {
-        ID = 256
-    };
-
     /**
      * @brief A definition of the different types.
      * @todo Define these values.
@@ -139,7 +131,7 @@ namespace Environment
              *
              * Construct Symbol Table Entry.
              */
-            SymbolTableEntry(const std::string lexeme, const int offset = 0, const TOKEN_VALUE value = ID);
+            SymbolTableEntry(const std::string lexeme, const int offset = 0, const TOKEN_VALUE value = IDENTIFIER);
 
             /**
              * @brief Equivalency Operator
