@@ -71,6 +71,8 @@ namespace LexicalAnalyzer
         }
         if (this->tokenizer->Peek().GetTokenValue() != Environment::NUMBER)
             throw ParserException(this->tokenizer->Peek(), Environment::NUMBER, this->tokenizer->GetCurrentLine());
+        tmp = this->tokenizer->Get();
+        if (this->debug) std::cerr << tmp << std::endl;
     }
 
     void Parser::identifier(bool declaration)
