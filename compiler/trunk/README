@@ -35,64 +35,220 @@ The executable will be in ${build_dir}/src/compiler.
 This program utilizes the following:
   1) STL map
   2) STL list
+  3) Boost Program Options
+  4) STL vector
 
 ****************************
 * Program Input and Output *
 ****************************
 
 Input ::
-  Options which are parsed from the CLI as well as a source file to compile.
+  Options which are parsed from the CLI as well as a set of source files to compile.
 
 Ouput ::
-  Outputs the intermediary language file to be executed unless specified to
-  be redirected elsewhere.
+  Outputs any syntax errors in the input file and prints out a semi-meaningful error report.
 
-  Currently this application only tests the functionality of the symbol table.
+  Currently this application only parses the file and generates the symbol table.
 
   Example:
-    compiler
-    Adding foo, 256, 513, 0 [ok]
-    Adding bar, 256, 513, 0 [ok]
-    Adding rar, 256, 513, 0 [ok]
 
-    Symbol Table:
-    Level: 0
-    bar, 256, 513, 0
-    foo, 256, 513, 0
-    rar, 256, 513, 0
+$ src/compiler ../test/test20.p
+Got: < Y, 256, 0, 0 >
+Expected: 256
+Line: 33
+Undeclared Identifier
 
-    Adding a lexical scope!
-    Adding farsi, 256, 513, 0 [ok]
-    Adding francais, 256, 513, 0 [ok]
-    Adding deutsch, 256, 513, 0 [ok]
+  With the debugging flag set the entire parsing is shown in full detail to find problems with the
+  compiler itself if they are suspected.
 
-    Symbol Table:
-    Level: 0
-    deutsch, 256, 513, 0
-    farsi, 256, 513, 0
-    francais, 256, 513, 0
-    Level: 1
-    bar, 256, 513, 0
-    foo, 256, 513, 0
-    rar, 256, 513, 0
+$ src/compiler ../test/test20.p -d
+< PROGRAM, 257, 0, 0 >
+< VAR, 257, 0, 0 >
+< UP, 256, 0, 0 >
+< ,, 259, 0, 0 >
+< LO, 256, 0, 0 >
+< ;, 259, 0, 0 >
+< PROCEDURE, 257, 0, 0 >
+< A, 256, 0, 0 >
+< ;, 259, 0, 0 >
+Level: 0
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
 
-    Overwriting previous lexical scope values!
-    Adding foo, 256, 513, 0 [ok]
-    Adding bar, 256, 513, 0 [ok]
-    Checking lexical scope values of overwritten and non-overwritten values!
-    Checking local scope:
-    farsi, 256, 513, 0 found at level 0 [ok]
-    Checking previous scope:
-    rar, 256, 513, 0 found at level 1 [ok]
-    Checking overwritten scope:
-    foo, 256, 513, 0 found at level 0 [ok]
-    Removing a lexical scope!
+< VAR, 257, 0, 0 >
+< Y, 256, 0, 0 >
+< ,, 259, 0, 0 >
+< Z, 256, 0, 0 >
+< ;, 259, 0, 0 >
+< PROCEDURE, 257, 0, 0 >
+< C, 256, 0, 0 >
+< ;, 259, 0, 0 >
+Level: 0
+C, 256, 513, 0
+Y, 256, 513, 0
+Z, 256, 513, 0
+Level: 1
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
 
-    Symbol Table:
-    Level: 0
-    bar, 256, 513, 0
-    foo, 256, 513, 0
-    rar, 256, 513, 0
+< VAR, 257, 0, 0 >
+< Z, 256, 0x69f450, 1 >
+< ,, 259, 0, 0 >
+< M, 256, 0, 0 >
+< ;, 259, 0, 0 >
+< BEGIN, 257, 0, 0 >
+< Z, 256, 0x69f830, 0 >
+< :=, 259, 0, 0 >
+< 12, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< M, 256, 0x69f970, 0 >
+< :=, 259, 0, 0 >
+< 7, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< Y, 256, 0x69f350, 1 >
+< :=, 259, 0, 0 >
+< Z, 256, 0x69f830, 0 >
+< ;, 259, 0, 0 >
+< Y, 256, 0x69f350, 1 >
+< :=, 259, 0, 0 >
+< M, 256, 0x69f970, 0 >
+< ;, 259, 0, 0 >
+< Y, 256, 0x69f350, 1 >
+< :=, 259, 0, 0 >
+< Y, 256, 0x69f350, 1 >
+< END, 257, 0, 0 >
+Level: 0
+M, 256, 513, 0
+Z, 256, 513, 0
+Level: 1
+C, 256, 513, 0
+Y, 256, 513, 0
+Z, 256, 513, 0
+Level: 2
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
+
+< ;, 259, 0, 0 >
+< PROCEDURE, 257, 0, 0 >
+< D, 256, 0, 0 >
+< ;, 259, 0, 0 >
+Level: 0
+C, 256, 513, 0
+D, 256, 513, 0
+Y, 256, 513, 0
+Z, 256, 513, 0
+Level: 1
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
+
+< VAR, 257, 0, 0 >
+< Z, 256, 0x69f450, 1 >
+< ,, 259, 0, 0 >
+< N, 256, 0, 0 >
+< ;, 259, 0, 0 >
+< BEGIN, 257, 0, 0 >
+< Z, 256, 0x6a01f0, 0 >
+< :=, 259, 0, 0 >
+< 1, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< Z, 256, 0x6a01f0, 0 >
+< :=, 259, 0, 0 >
+< Z, 256, 0x6a01f0, 0 >
+< *, 259, 0, 0 >
+< 10, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< N, 256, 0x6a0160, 0 >
+< :=, 259, 0, 0 >
+< (, 259, 0, 0 >
+< Z, 256, 0x6a01f0, 0 >
+< MOD, 257, 0, 0 >
+< 4, 258, 0, 0 >
+< ), 259, 0, 0 >
+< /, 259, 0, 0 >
+< 7, 258, 0, 0 >
+< +, 259, 0, 0 >
+< 6, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< CALL, 257, 0, 0 >
+< C, 256, 0x69f620, 1 >
+< ;, 259, 0, 0 >
+< END, 257, 0, 0 >
+Level: 0
+N, 256, 513, 0
+Z, 256, 513, 0
+Level: 1
+C, 256, 513, 0
+D, 256, 513, 0
+Y, 256, 513, 0
+Z, 256, 513, 0
+Level: 2
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
+
+< ;, 259, 0, 0 >
+< BEGIN, 257, 0, 0 >
+< Y, 256, 0x69f350, 0 >
+< :=, 259, 0, 0 >
+< 0, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< IF, 257, 0, 0 >
+< Y, 256, 0x69f350, 0 >
+< =, 259, 0, 0 >
+< 0, 258, 0, 0 >
+< THEN, 257, 0, 0 >
+< Z, 256, 0x69f450, 0 >
+< :=, 259, 0, 0 >
+< 10, 258, 0, 0 >
+< MOD, 257, 0, 0 >
+< 4, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< CALL, 257, 0, 0 >
+< D, 256, 0x69f830, 0 >
+< END, 257, 0, 0 >
+Level: 0
+C, 256, 513, 0
+D, 256, 513, 0
+Y, 256, 513, 0
+Z, 256, 513, 0
+Level: 1
+A, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
+
+< ;, 259, 0, 0 >
+< PROCEDURE, 257, 0, 0 >
+< B, 256, 0, 0 >
+< ;, 259, 0, 0 >
+Level: 0
+A, 256, 513, 0
+B, 256, 513, 0
+LO, 256, 513, 0
+UP, 256, 513, 0
+
+< VAR, 257, 0, 0 >
+< F, 256, 0, 0 >
+< ,, 259, 0, 0 >
+< G, 256, 0, 0 >
+< ;, 259, 0, 0 >
+< BEGIN, 257, 0, 0 >
+< F, 256, 0x69c8a0, 0 >
+< :=, 259, 0, 0 >
+< 7, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< G, 256, 0x6a10e0, 0 >
+< :=, 259, 0, 0 >
+< 25, 258, 0, 0 >
+< ;, 259, 0, 0 >
+< Y, 256, 0, 0 >
+Got: < Y, 256, 0, 0 >
+Expected: 256
+Line: 33
+Undeclared Identifier
 
 ******************
 * Program Design *
@@ -125,20 +281,6 @@ SymbolTable ::
 
   Fields:
     tables  - The list that contains all of the tables for the different scopes.
-
-The following function declarations are utilized:
-
-int main();
----------------------------------
-  Glossary of Variables:
-    SymbolTable *       symboltable         //!< The symbol table.
-    SymbolTableEntry *  symboltableentry    //!< The entry we are working with.
-    int                 level               //!< An integer for the level return.
-
-    This is the driving function of the program, and calls the following functions:
-
-    void AddLexeme(string lexeme, SymbolTable &symboltable);
-    void FindLexeme(string lexeme, SymbolTable &symboltable);
 
 **************
 * File Index *
