@@ -31,6 +31,16 @@ namespace Environment
         this->type = REAL;
     }
 
+    ID_TYPE SymbolTableEntry::GetIdentifierType() const
+    {
+        return this->tipe;
+    }
+
+    void SymbolTableEntry::SetIdentifierType(const ID_TYPE tipe)
+    {
+        this->tipe = tipe;
+    }
+
     std::string SymbolTableEntry::GetLexeme() const
     {
         return this->lexeme;

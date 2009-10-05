@@ -47,6 +47,17 @@ namespace Environment
     };
 
     /**
+     * @brief A definition of ID types.
+     */
+    enum ID_TYPE
+    {
+        CONST = 1024,
+        VAR,
+        PROCEDURE,
+        VARCONST
+    };
+
+    /**
      * @brief An entry in a symbol table.
      *
      * This class requires 4 elements (lexeme, type, offset, token value), but
@@ -89,6 +100,20 @@ namespace Environment
              * Get the type of token of the entry.
              */
             TOKEN_VALUE GetTokenValue() const;
+
+            /**
+             * @brief Set the type of the identifier.
+             * @param tipe The tipe of the identifier.
+             *
+             * Change the tipe of the identifer.
+             */
+            void SetIdentifierType(const ID_TYPE tipe);
+
+            /**
+             * @brief Get the type of the identifier.
+             * @return ID_TYPE specifying the type of the identifier.
+             */
+            ID_TYPE GetIdentifierType() const;
 
             /**
              * @brief Set the ARI addressing offset.
@@ -171,6 +196,7 @@ namespace Environment
             int offset;
             TOKEN_VALUE value;
             TOKEN_TYPE type;
+            ID_TYPE tipe;
     };
 };
 

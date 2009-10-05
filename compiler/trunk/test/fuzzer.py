@@ -28,7 +28,10 @@ class Fuzzer:
     def __init__(self):
         self._parseOptions()
         self._tokenCount = 0
-        self._identifiers = []
+        self._identifiers = {}
+        self._identifiers["functions"] = []
+        self._identifiers["variables"] = []
+        self._identifiers["constants"] = []
 
     def _parseOptions(self):
         description_list = [
@@ -66,10 +69,22 @@ class Fuzzer:
     def GenerateCode(self):
         output = "PROGRAM\n"
         self._incrementTokenCount()
+        self._addLevel()
         output += self._generateBlock(0)
-        output += "\n.\n"
+        self._removeLevel()
+        output += "\n."
         self._incrementTokenCount()
         return output
+
+    def _addLevel(self):
+        self._identifiers["functions"].append([])
+        self._identifiers["variables"].append([])
+        self._identifiers["constants"].append([])
+
+    def _removeLevel(self):
+        self._identifiers["functions"].pop()
+        self._identifiers["variables"].pop()
+        self._identifiers["constants"].pop()
 
     def _generateBlock(self, level):
         output = ""
@@ -85,8 +100,8 @@ class Fuzzer:
     def _haveMaxTokens(self):
         return (self._tokenCount > self._options.tokens - 1)
 
-    def _generateConstIdentifier(self):
-        output = self._generateIdentifier()
+    def _generateConstIdentifier(self, level):
+        output = self._generateIdentifier("constants", level)
         output += " = "
         self._incrementTokenCount()
         choice = random.randint(0, 2)
@@ -102,11 +117,13 @@ class Fuzzer:
     def _generateProcedureIdentifier(self, level):
         output = "\t"*level + "PROCEDURE "
         self._incrementTokenCount()
-        output += self._generateIdentifier()
+        output += self._generateIdentifier("functions", level)
         output += ";\n"
         self._incrementTokenCount()
+        self._addLevel()
         output += self._generateBlock(level + 1)
-        output += ";\n"
+        self._removeLevel()
+        output += "\t"*level + ";\n"
         self._incrementTokenCount()
         return output
 
@@ -116,12 +133,12 @@ class Fuzzer:
         while (constBlocks < self._maxItems() and not self._haveMaxTokens()):
             output += "\t"*level + "CONST "
             self._incrementTokenCount()
-            output += self._generateConstIdentifier()
+            output += self._generateConstIdentifier(level)
             constIdentifiers = 0
             while (constIdentifiers < self._maxItems() and not self._haveMaxTokens()):
                 output += ", "
                 self._incrementTokenCount()
-                output += self._generateConstIdentifier()
+                output += self._generateConstIdentifier(level)
                 constIdentifiers += 1
             output += ";\n"
             self._incrementTokenCount()
@@ -141,19 +158,19 @@ class Fuzzer:
         while (varDeclarations < self._maxItems() and not self._haveMaxTokens()):
             output += "\t"*level + "VAR "
             self._incrementTokenCount()
-            output += self._generateIdentifier()
+            output += self._generateIdentifier("variables", level)
             varIdentifiers = 0
             while (varIdentifiers < self._maxItems() and not self._haveMaxTokens()):
                 output += ", "
                 self._incrementTokenCount()
-                output += self._generateIdentifier()
+                output += self._generateIdentifier("variables", level)
                 varIdentifiers += 1
             output += ";\n"
             self._incrementTokenCount()
             varDeclarations += 1
         return output
 
-    def _generateIdentifier(self):
+    def _generateIdentifier(self, tipe, level):
         output = self._generateCharacter()
         identifierLength = random.randint(0, self._options.varlength - 1)
         for i in range(identifierLength):
@@ -163,7 +180,7 @@ class Fuzzer:
             else:
                 output += self._generateDigit()
         self._incrementTokenCount()
-        self._identifiers.append(output)
+        self._identifiers[tipe][level].append(output)
         return output
 
     def _generateCharacter(self):
@@ -180,8 +197,10 @@ class Fuzzer:
     def _generateDigit(self):
         return random.choice('0123456789')
 
-    def _getIdentifier(self):
-        identifier = random.sample(self._identifiers, 1)[0]
+    def _getIdentifier(self, tipe, level):
+        if len(self._identifiers[tipe][level]) == 0:
+            return False
+        identifier = random.sample(self._identifiers[tipe][level], 1)[0]
         self._incrementTokenCount()
         return identifier
 
@@ -189,61 +208,87 @@ class Fuzzer:
         output = "\t"*level
         choice = random.randint(0,7)
         if (choice == 0):
-            output += self._getIdentifier()
+            tmp = self._getIdentifier("variables", level)
+            if tmp == False:
+                return ""
+            output += tmp
             output += " := "
             self._incrementTokenCount()
-            output += self._generateExpression()
+            output += self._generateExpression(level)
         elif (choice == 1):
             output += "BEGIN\n"
             self._incrementTokenCount()
+            self._addLevel()
             output += self._generateStatement(level + 1)
+            self._removeLevel()
             statements = self._maxItems()
             while (self._tokenCount < statements):
                 output += ";\n"
                 self._incrementTokenCount()
+                self._addLevel()
                 output += self._generateStatement(level + 1)
+                self._removeLevel()
                 statements += 1
-            output += "\n" + "\t"*level + "END"
+            output += "\n" + "\t"*level + "END\n"
             self._incrementTokenCount()
         elif (choice == 2):
             output += "IF "
             self._incrementTokenCount()
-            output += self._generateCondition()
+            output += self._generateCondition(level)
             output += " THEN\n"
             self._incrementTokenCount()
+            self._addLevel()
             output += self._generateStatement(level + 1)
+            self._removeLevel()
         elif (choice == 3):
             output += "WHILE "
             self._incrementTokenCount()
-            output += self._generateCondition()
+            output += self._generateCondition(level)
             output += " DO\n"
             self._incrementTokenCount()
+            self._addLevel()
             output += self._generateStatement(level + 1)
+            self._removeLevel()
         elif (choice == 4):
             output += "READ "
             self._incrementTokenCount()
-            output += self._getIdentifier()
+            tmp = self._getIdentifier("variables", level)
+            if tmp == False:
+                return ""
+            output += tmp
         elif (choice == 5):
             output += "CALL "
             self._incrementTokenCount()
-            output += self._getIdentifier()
+            tmp = self._getIdentifier("functions", level)
+            if tmp == False:
+                return ""
+            output += tmp
         elif (choice == 6):
             output += "PRINT "
             self._incrementTokenCount()
-            output += self._getIdentifier()
+            tipe = random.randint(0, 1)
+            if (tipe == 0):
+                tipe = "constants"
+            else:
+                tipe = "variables"
+            tmp = self._getIdentifier(tipe, level)
+            if tmp == False:
+                return ""
+            output += tmp
         else:
             output += "\n"
+        output += "\n"
         return output
 
-    def _generateCondition(self):
+    def _generateCondition(self, level):
         output = ""
         choice = random.randint(0, 1)
         if (choice == 0):
             output += " ODD "
             self._incrementTokenCount()
-            output += self._generateExpression()
+            output += self._generateExpression(level)
         else:
-            output += self._generateExpression()
+            output += self._generateExpression(level)
             choice = random.randint(0, 5)
             if (choice == 0):
                 output += " = "
@@ -263,12 +308,12 @@ class Fuzzer:
             elif (choice == 5):
                 output += " >= "
                 self._incrementTokenCount()
-            output += self._generateExpression()
+            output += self._generateExpression(level)
         return output
 
-    def _generateExpression(self):
+    def _generateExpression(self, level):
         output = ""
-        output += self._generateTerm()
+        output += self._generateTerm(level)
         terms = 0
         while (terms < self._maxItems() and not self._haveMaxTokens()):
             choice = random.randint(0, 1)
@@ -278,11 +323,11 @@ class Fuzzer:
             else:
                 output += " - "
                 self._incrementTokenCount()
-            output += self._generateTerm()
+            output += self._generateTerm(level)
             terms += 1
         return output
 
-    def _generateTerm(self):
+    def _generateTerm(self, level):
         output = ""
         choice = random.randint(0, 2)
         if (choice == 0):
@@ -291,7 +336,7 @@ class Fuzzer:
         elif (choice == 1):
             output += " -"
             self._incrementTokenCount()
-        output += self._generateFactor()
+        output += self._generateFactor(level)
         factors = 0
         while (factors < self._maxItems() and not self._haveMaxTokens()):
             choice = random.randint(0, 3)
@@ -307,21 +352,31 @@ class Fuzzer:
             elif (choice == 3):
                 output += " MOD "
                 self._incrementTokenCount()
-            output += self._generateFactor()
+            output += self._generateFactor(level)
             factors += 1
         return output
 
-    def _generateFactor(self):
+    def _generateFactor(self, level):
         output = ""
         choice = random.randint(0, 2)
         if (choice == 0):
             output += "("
             self._incrementTokenCount()
-            output += self._generateExpression()
+            output += self._generateExpression(level)
             output += ")"
             self._incrementTokenCount()
         elif (choice == 1):
-            output += self._getIdentifier()
+            tipe = random.randint(0, 2)
+            if (choice == 0):
+                tipe = "functions"
+            elif (choice == 1):
+                tipe = "constants"
+            else:
+                tipe = "variables"
+            tmp = self._getIdentifier(tipe, level)
+            if tmp == False:
+                return ""
+            output += tmp
         elif (choice == 2):
             output += self._generateNumber()
         return output

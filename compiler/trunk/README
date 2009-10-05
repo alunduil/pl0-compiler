@@ -1,7 +1,7 @@
 ###############################################################################
 # File:         README
 # Author:       Alex Brandt
-# Date:         2009/09/06
+# Date:         2009/09/30
 ###############################################################################
 
 ***********
@@ -79,168 +79,11 @@ UP, 256, 513, 0
 < VAR, 257, 0, 0 >
 < Y, 256, 0, 0 >
 < ,, 259, 0, 0 >
-< Z, 256, 0, 0 >
-< ;, 259, 0, 0 >
-< PROCEDURE, 257, 0, 0 >
-< C, 256, 0, 0 >
-< ;, 259, 0, 0 >
-Level: 0
-C, 256, 513, 0
-Y, 256, 513, 0
-Z, 256, 513, 0
-Level: 1
-A, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
 
-< VAR, 257, 0, 0 >
-< Z, 256, 0x69f450, 1 >
-< ,, 259, 0, 0 >
-< M, 256, 0, 0 >
-< ;, 259, 0, 0 >
-< BEGIN, 257, 0, 0 >
-< Z, 256, 0x69f830, 0 >
-< :=, 259, 0, 0 >
-< 12, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< M, 256, 0x69f970, 0 >
-< :=, 259, 0, 0 >
-< 7, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< Y, 256, 0x69f350, 1 >
-< :=, 259, 0, 0 >
-< Z, 256, 0x69f830, 0 >
-< ;, 259, 0, 0 >
-< Y, 256, 0x69f350, 1 >
-< :=, 259, 0, 0 >
-< M, 256, 0x69f970, 0 >
-< ;, 259, 0, 0 >
-< Y, 256, 0x69f350, 1 >
-< :=, 259, 0, 0 >
-< Y, 256, 0x69f350, 1 >
-< END, 257, 0, 0 >
-Level: 0
-M, 256, 513, 0
-Z, 256, 513, 0
-Level: 1
-C, 256, 513, 0
-Y, 256, 513, 0
-Z, 256, 513, 0
-Level: 2
-A, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
+...
+Cut to conserve space
+...
 
-< ;, 259, 0, 0 >
-< PROCEDURE, 257, 0, 0 >
-< D, 256, 0, 0 >
-< ;, 259, 0, 0 >
-Level: 0
-C, 256, 513, 0
-D, 256, 513, 0
-Y, 256, 513, 0
-Z, 256, 513, 0
-Level: 1
-A, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
-
-< VAR, 257, 0, 0 >
-< Z, 256, 0x69f450, 1 >
-< ,, 259, 0, 0 >
-< N, 256, 0, 0 >
-< ;, 259, 0, 0 >
-< BEGIN, 257, 0, 0 >
-< Z, 256, 0x6a01f0, 0 >
-< :=, 259, 0, 0 >
-< 1, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< Z, 256, 0x6a01f0, 0 >
-< :=, 259, 0, 0 >
-< Z, 256, 0x6a01f0, 0 >
-< *, 259, 0, 0 >
-< 10, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< N, 256, 0x6a0160, 0 >
-< :=, 259, 0, 0 >
-< (, 259, 0, 0 >
-< Z, 256, 0x6a01f0, 0 >
-< MOD, 257, 0, 0 >
-< 4, 258, 0, 0 >
-< ), 259, 0, 0 >
-< /, 259, 0, 0 >
-< 7, 258, 0, 0 >
-< +, 259, 0, 0 >
-< 6, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< CALL, 257, 0, 0 >
-< C, 256, 0x69f620, 1 >
-< ;, 259, 0, 0 >
-< END, 257, 0, 0 >
-Level: 0
-N, 256, 513, 0
-Z, 256, 513, 0
-Level: 1
-C, 256, 513, 0
-D, 256, 513, 0
-Y, 256, 513, 0
-Z, 256, 513, 0
-Level: 2
-A, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
-
-< ;, 259, 0, 0 >
-< BEGIN, 257, 0, 0 >
-< Y, 256, 0x69f350, 0 >
-< :=, 259, 0, 0 >
-< 0, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< IF, 257, 0, 0 >
-< Y, 256, 0x69f350, 0 >
-< =, 259, 0, 0 >
-< 0, 258, 0, 0 >
-< THEN, 257, 0, 0 >
-< Z, 256, 0x69f450, 0 >
-< :=, 259, 0, 0 >
-< 10, 258, 0, 0 >
-< MOD, 257, 0, 0 >
-< 4, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< CALL, 257, 0, 0 >
-< D, 256, 0x69f830, 0 >
-< END, 257, 0, 0 >
-Level: 0
-C, 256, 513, 0
-D, 256, 513, 0
-Y, 256, 513, 0
-Z, 256, 513, 0
-Level: 1
-A, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
-
-< ;, 259, 0, 0 >
-< PROCEDURE, 257, 0, 0 >
-< B, 256, 0, 0 >
-< ;, 259, 0, 0 >
-Level: 0
-A, 256, 513, 0
-B, 256, 513, 0
-LO, 256, 513, 0
-UP, 256, 513, 0
-
-< VAR, 257, 0, 0 >
-< F, 256, 0, 0 >
-< ,, 259, 0, 0 >
-< G, 256, 0, 0 >
-< ;, 259, 0, 0 >
-< BEGIN, 257, 0, 0 >
-< F, 256, 0x69c8a0, 0 >
-< :=, 259, 0, 0 >
-< 7, 258, 0, 0 >
-< ;, 259, 0, 0 >
-< G, 256, 0x6a10e0, 0 >
 < :=, 259, 0, 0 >
 < 25, 258, 0, 0 >
 < ;, 259, 0, 0 >
@@ -323,10 +166,10 @@ README              this file
 
 This program does not perform its fully described functionality yet, but does
 fulfill the initial requirements.  It has a fully functioning (but not necessarily
-error free) implementation of a symbol table.  The next step will be to add the
-lexical analyzer.  The main function of this implementation tests the symbol table
-in a fairly rigorous manner.  Test will be placed in a unit testing library as time
-allows and as errors are found.
+error free) implementation of a symbol table, lexical analyzer, and parser.  The next
+step will be to add the error handling and code generation.  The main function of this
+implementation runs the parser and generates the syntax parse tree in a fairly rigorous
+manner.
 
 **************
 * Known Bugs *
