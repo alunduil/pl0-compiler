@@ -112,6 +112,11 @@ namespace LexicalAnalyzer
              * @return Token.
              */
             Environment::Token get();
+
+            /**
+             * @brief Add the keywords to the symbol table.
+             */
+            void addKeywords();
     };
 }
 

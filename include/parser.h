@@ -24,6 +24,7 @@
 #include <string>
 #include <istream>
 #include <token.h>
+#include <symboltableentry.h>
 
 namespace Environment
 {
@@ -59,6 +60,12 @@ namespace LexicalAnalyzer
             Tokenizer *tokenizer;
             bool debug;
             Environment::SymbolTable *table;
+
+            enum ID_PURPOSE
+            {
+                DECLARE,
+                USE
+            };
 
             /**
              * @brief Parse a program.
@@ -137,17 +144,17 @@ namespace LexicalAnalyzer
             /**
              * @brief IDENTIFIER
              */
-            void identifier(bool declaration = false);
-
-            /**
-             * @brief Read character
-             */
-            void specialCharacter(std::string foo);
+            void identifier(Environment::ID_TYPE tipe, ID_PURPOSE declaration = USE);
 
             /**
              * @brief Read number
              */
             void number();
+
+            /**
+             * @brief Match a token.
+             */
+            void match(Environment::TOKEN_VALUE, std::string lexeme = "");
     };
 
     class ParserException
