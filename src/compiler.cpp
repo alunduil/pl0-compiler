@@ -29,7 +29,7 @@
 #include <fstream>
 
 Compiler::Compiler(int argc, char *argv[])
-:options("Options")
+        : options("Options")
 {
     this->parseOptions(argc, argv);
 }
@@ -38,10 +38,10 @@ void Compiler::parseOptions(int argc, char *argv[])
 {
     using namespace boost::program_options;
     options.add_options()
-        ("help,h", "Produce help information.")
-        ("debug,d", "Turn on the debug flag to have extremely verbose output.")
-        ("filename,f", value<std::vector<std::string> >(), "The file to compile.")
-        ("output,o", value<std::string>(), "The output file")
+    ("help,h", "Produce help information.")
+    ("debug,d", "Turn on the debug flag to have extremely verbose output.")
+    ("filename,f", value<std::vector<std::string> >(), "The file to compile.")
+    ("output,o", value<std::string>(), "The output file")
     ;
 
     positional_options_description arguments;
@@ -72,3 +72,4 @@ void Compiler::Run()
     }
     out << parser.Code();
 }
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

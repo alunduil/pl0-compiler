@@ -92,3 +92,4 @@ namespace Environment
         return out << "< " << this->lexeme << ", " << this->value << ", " << this->entry << ", " << this->level << " >";
     }
 }
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 
