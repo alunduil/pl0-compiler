@@ -45,3 +45,4 @@ namespace LexicalAnalyzer
         this->function = function;
     }
 }
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

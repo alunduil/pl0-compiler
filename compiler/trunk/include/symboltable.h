@@ -243,3 +243,4 @@ namespace Environment
 };
 
 #endif // SYMBOLTABLE_H
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

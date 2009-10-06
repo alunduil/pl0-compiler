@@ -93,7 +93,7 @@ namespace LexicalAnalyzer
                 this->match(Environment::OPERATOR, "=");
                 if (this->tokenizer->Peek().GetLexeme() == "+" || this->tokenizer->Peek().GetLexeme() == "-")
                     tmp = this->tokenizer->Get();
-                this->code.Push(new Instruction("lit", 0, (tmp.GetLexeme()== "-") ? -1*boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme()) : boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme())));
+                this->code.Push(new Instruction("lit", 0, (tmp.GetLexeme() == "-") ? -1*boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme()) : boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme())));
                 this->code.Push(new Instruction("sto", 0, this->table->Find(id, level)->GetOffSet()));
                 this->match(Environment::NUMBER);
             }
@@ -275,12 +275,12 @@ namespace LexicalAnalyzer
         }
         this->expression();
         this->code.Push(new Instruction("opr", 0,
-            (op == "ODD") ? 6 :
-            (op == "=") ? 8 :
-            (op == "<>") ? 9 :
-            (op == "<") ? 10 :
-            (op == ">") ? 12 :
-            (op == "<=") ? 13 : 11));
+                                        (op == "ODD") ? 6 :
+                                        (op == "=") ? 8 :
+                                        (op == "<>") ? 9 :
+                                        (op == "<") ? 10 :
+                                        (op == ">") ? 12 :
+                                        (op == "<=") ? 13 : 11));
     }
 
     void Parser::term()
@@ -311,7 +311,7 @@ namespace LexicalAnalyzer
             }
             else
                 this->code.Push(new Instruction("opr", 0, (op == "*") ? 4 :
-                    (op == "/") ? 5 : 5));
+                                                (op == "/") ? 5 : 5));
         }
     }
 
@@ -349,4 +349,4 @@ namespace LexicalAnalyzer
         this->msg = msg;
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4;
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

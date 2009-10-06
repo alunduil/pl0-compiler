@@ -204,3 +204,4 @@ namespace LexicalAnalyzer
         return ret;
     }
 }
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

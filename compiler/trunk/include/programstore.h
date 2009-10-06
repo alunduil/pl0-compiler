@@ -65,4 +65,4 @@ namespace LexicalAnalyzer
 }
 
 #endif // PROGRAMSTORE_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4;
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 
