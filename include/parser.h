@@ -25,6 +25,7 @@
 #include <istream>
 #include <token.h>
 #include <symboltableentry.h>
+#include <programstore.h>
 
 namespace Environment
 {
@@ -49,6 +50,11 @@ namespace LexicalAnalyzer
             Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false);
 
             /**
+             * @brief Return the string of code generated.
+             */
+            std::string Code();
+
+            /**
             * @brief Parse the input.
             *
             * Parse the input and if the debug flag is set print out the tree as it
@@ -60,6 +66,7 @@ namespace LexicalAnalyzer
             Tokenizer *tokenizer;
             bool debug;
             Environment::SymbolTable *table;
+            ProgramStore code;
 
             enum ID_PURPOSE
             {

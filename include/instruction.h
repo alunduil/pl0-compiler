@@ -1,0 +1,87 @@
+/*
+    <one line to give the program's name and a brief idea of what it does.>
+    Copyright (C) <year>  <name of author>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+*/
+
+#ifndef INSTRUCTION_H
+#define INSTRUCTION_H
+
+#include <string>
+
+namespace LexicalAnalyzer
+{
+    class Instruction
+    {
+        public:
+            /**
+             * @brief Constructor.
+             * @param function The function for this instruction.
+             * @param level The level associated with this function.
+             * @param address The address for the function.
+             */
+            Instruction(std::string function, int level, int address);
+
+            /**
+             * @brief Get the function of the instruction.
+             * @return The function.
+             */
+            std::string GetFunction() const;
+
+            /**
+             * @brief Set the function of the instruction.
+             * @param function The function to store.
+             */
+            void SetFunction(const std::string);
+
+            /**
+             * @brief Get the level of the instruction.
+             * @return The level.
+             */
+            int GetLevel() const;
+
+            /**
+             * @brief Set the level of the instruction.
+             * @param level The level to store.
+             */
+            void SetLevel(const int level);
+
+            /**
+             * @brief Get the address of the instruction.
+             * @return The address.
+             */
+            int GetAddress() const;
+
+            /**
+             * @brief Set the address of the instruction.
+             * @param address The address to store.
+             */
+            void SetAddress(const int address);
+
+            /**
+             * @brief Convert to string.
+             * @return A string for the instruction.
+             */
+            std::string ToString() const;
+        private:
+            std::string function;
+            int level;
+            int address;
+    };
+}
+
+#endif // INSTRUCTION_H

@@ -25,6 +25,8 @@
 #include <tokenizer.h>
 #include <symboltableentry.h>
 #include <boost/lexical_cast.hpp>
+#include <instruction.h>
+#include <programstore.h>
 
 #define ERROR(E) throw ParserException(this->tokenizer->Peek(), (E), this->tokenizer->GetCurrentLine())
 
@@ -44,19 +46,20 @@ namespace LexicalAnalyzer
         this->tokenizer = new Tokenizer(fileName, table);
     }
 
+    std::string Parser::Code()
+    {
+        return this->code.ToString();
+    }
+
     void Parser::match(Environment::TOKEN_VALUE value, std::string lexeme)
     {
         bool tmp = this->tokenizer->Peek().GetTokenValue() == value;
-#ifndef NDEBUG
         Environment::Token foo("blank");
-        foo = this->tokenizer->Peek();
-#endif
+        if (this->debug) foo = this->tokenizer->Peek();
         if (!(lexeme.length() == 0 && tmp) && !(lexeme.length() > 0 && tmp && this->tokenizer->Peek().GetLexeme() == lexeme))
             ERROR(value);
         this->tokenizer->Ignore();
-#ifndef NDEBUG
-        std::cerr << foo << std::endl;
-#endif
+        if (this->debug) std::cerr << foo << std::endl;
     }
 
     void Parser::Parse()
@@ -66,7 +69,6 @@ namespace LexicalAnalyzer
 
     void Parser::program()
     {
-        Environment::Token tmp("blank");
         this->match(Environment::KEYWORD, "PROGRAM");
         this->block();
         this->match(Environment::OPERATOR, ".");
@@ -76,6 +78,9 @@ namespace LexicalAnalyzer
     void Parser::block()
     {
         Environment::Token tmp("blank");
+        int addr = this->code.TopAddress();
+        int level = 0;
+        this->code.Push(new Instruction("int", 0, 3));
         while (this->tokenizer->Peek().GetLexeme() == "CONST")
         {
             this->match(Environment::KEYWORD, "CONST");
@@ -83,13 +88,13 @@ namespace LexicalAnalyzer
             {
                 if (this->tokenizer->Peek().GetLexeme() == ",")
                     this->tokenizer->Get();
+                std::string id = this->tokenizer->Peek().GetLexeme();
                 this->identifier(Environment::CONST, DECLARE);
                 this->match(Environment::OPERATOR, "=");
                 if (this->tokenizer->Peek().GetLexeme() == "+" || this->tokenizer->Peek().GetLexeme() == "-")
-                {
                     tmp = this->tokenizer->Get();
-                    if (this->debug) std::cerr << tmp << std::endl;
-                }
+                this->code.Push(new Instruction("lit", 0, (tmp.GetLexeme()== "-") ? -1*boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme()) : boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme())));
+                this->code.Push(new Instruction("sto", 0, this->table->Find(id, level)->GetOffSet()));
                 this->match(Environment::NUMBER);
             }
             while (this->tokenizer->Peek().GetLexeme() == ",");
@@ -110,7 +115,13 @@ namespace LexicalAnalyzer
         while (this->tokenizer->Peek().GetLexeme() == "PROCEDURE")
         {
             this->match(Environment::KEYWORD, "PROCEDURE");
+            int addr2 = this->code.TopAddress();
+            this->code.Push(new Instruction("jmp", 0, 1));
+            std::string id = this->tokenizer->Peek().GetLexeme();
+            int level;
             this->identifier(Environment::PROCEDURE, DECLARE);
+            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
+            entry->SetAddress(this->code.TopAddress());
             this->match(Environment::OPERATOR, ";");
             if (this->debug) std::cerr << *this->table << std::endl;
             this->table->Push();
@@ -118,7 +129,10 @@ namespace LexicalAnalyzer
             if (this->debug) std::cerr << *this->table << std::endl;
             this->table->Pop();
             this->match(Environment::OPERATOR, ";");
+            this->code.Push(new Instruction("opr", 0, 0));
+            this->code[addr2].SetAddress(this->code.TopAddress());
         }
+        this->code[addr].SetAddress(this->table->Count());
         this->statement();
     }
 
@@ -156,9 +170,13 @@ namespace LexicalAnalyzer
         Environment::Token tmp("blank");
         if (this->tokenizer->Peek().GetTokenValue() == Environment::IDENTIFIER)
         {
+            std::string id = this->tokenizer->Peek().GetLexeme();
+            int level;
             this->identifier(Environment::VAR, USE);
             this->match(Environment::OPERATOR, ":=");
             this->expression();
+            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
+            this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
         }
         else if (this->tokenizer->Peek().GetLexeme() == "BEGIN")
         {
@@ -175,30 +193,50 @@ namespace LexicalAnalyzer
         {
             this->match(Environment::KEYWORD, "IF");
             this->condition();
+            int addr = this->code.TopAddress();
+            this->code.Push(new Instruction("jmp", 0, 1));
             this->match(Environment::KEYWORD, "THEN");
             this->statement();
+            this->code[addr].SetFunction("jpc");
+            this->code[addr].SetAddress(this->code.TopAddress());
         }
         else if (this->tokenizer->Peek().GetLexeme() == "WHILE")
         {
             this->match(Environment::KEYWORD, "WHILE");
+            int addr = this->code.TopAddress();
             this->condition();
+            int addr2 = this->code.TopAddress();
+            this->code.Push(new Instruction("jmp", 0, 1));
             this->match(Environment::KEYWORD, "DO");
             this->statement();
+            this->code.Push(new Instruction("jmp", 0, addr));
+            this->code[addr2].SetFunction("jpc");
+            this->code[addr2].SetAddress(this->code.TopAddress());
         }
         else if (this->tokenizer->Peek().GetLexeme() == "READ")
         {
             this->match(Environment::KEYWORD, "READ");
+            this->code.Push(new Instruction("opr", 0, 14));
+            std::string id = this->tokenizer->Peek().GetLexeme();
             this->identifier(Environment::VAR, USE);
+            int level;
+            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
+            this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
         }
         else if (this->tokenizer->Peek().GetLexeme() == "CALL")
         {
             this->match(Environment::KEYWORD, "CALL");
+            std::string id = this->tokenizer->Peek().GetLexeme();
             this->identifier(Environment::PROCEDURE, USE);
+            int level;
+            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
+            this->code.Push(new Instruction("cal", 0, entry->GetAddress()));
         }
         else if (this->tokenizer->Peek().GetLexeme() == "PRINT")
         {
             this->match(Environment::KEYWORD, "PRINT");
             this->expression();
+            this->code.Push(new Instruction("opr", 0, 15));
         }
     }
 
@@ -208,30 +246,73 @@ namespace LexicalAnalyzer
         this->term();
         while (this->tokenizer->Peek().GetLexeme() == "+" || this->tokenizer->Peek().GetLexeme() == "-")
         {
+            std::string op = this->tokenizer->Peek().GetLexeme();
             this->match(Environment::OPERATOR);
             this->term();
+            this->code.Push(new Instruction("opr", 0, (op == "+") ? 2 : 3));
         }
     }
 
     void Parser::condition()
     {
         Environment::Token tmp("blank");
+        std::string op = this->tokenizer->Peek().GetLexeme();
         if (this->tokenizer->Peek().GetLexeme() == "ODD")
             this->match(Environment::KEYWORD, "ODD");
         else
         {
             this->expression();
+            op = this->tokenizer->Peek().GetLexeme();
             if (this->tokenizer->Peek().GetLexeme() != "="
-                && this->tokenizer->Peek().GetLexeme() != "<>"
-                && this->tokenizer->Peek().GetLexeme() != "<"
-                && this->tokenizer->Peek().GetLexeme() != ">"
-                && this->tokenizer->Peek().GetLexeme() != "<="
-                && this->tokenizer->Peek().GetLexeme() != ">="
-                )
+                    && this->tokenizer->Peek().GetLexeme() != "<>"
+                    && this->tokenizer->Peek().GetLexeme() != "<"
+                    && this->tokenizer->Peek().GetLexeme() != ">"
+                    && this->tokenizer->Peek().GetLexeme() != "<="
+                    && this->tokenizer->Peek().GetLexeme() != ">="
+               )
                 throw ParserException(this->tokenizer->Peek(), Environment::OPERATOR, this->tokenizer->GetCurrentLine());
             this->match(Environment::OPERATOR);
         }
         this->expression();
+        this->code.Push(new Instruction("opr", 0,
+            (op == "ODD") ? 6 :
+            (op == "=") ? 8 :
+            (op == "<>") ? 9 :
+            (op == "<") ? 10 :
+            (op == ">") ? 12 :
+            (op == "<=") ? 13 : 11));
+    }
+
+    void Parser::term()
+    {
+        Environment::Token tmp("blank");
+        std::string op = this->tokenizer->Peek().GetLexeme();
+        if (this->tokenizer->Peek().GetLexeme() == "+" || this->tokenizer->Peek().GetLexeme() == "-")
+            this->match(Environment::OPERATOR);
+        this->factor();
+        if (op == "-") this->code.Push(new Instruction("opr", 0, 1));
+        op = this->tokenizer->Peek().GetLexeme();
+        while (this->tokenizer->Peek().GetLexeme() == "*"
+                || this->tokenizer->Peek().GetLexeme() == "/"
+                || this->tokenizer->Peek().GetLexeme() == "DIV"
+                || this->tokenizer->Peek().GetLexeme() == "MOD"
+              )
+        {
+            tmp = this->tokenizer->Get();
+            if (this->debug) std::cerr << tmp << std::endl;
+            if (op == "MOD") this->code.Push(new Instruction("opr", 0, 7));
+            this->factor();
+            if (op == "MOD")
+            {
+                this->code.Push(new Instruction("opr", 0, 5));
+                this->code.Push(new Instruction("int", 0, 1));
+                this->code.Push(new Instruction("opr", 0, 4));
+                this->code.Push(new Instruction("opr", 0, 3));
+            }
+            else
+                this->code.Push(new Instruction("opr", 0, (op == "*") ? 4 :
+                    (op == "/") ? 5 : 5));
+        }
     }
 
     void Parser::factor()
@@ -244,29 +325,20 @@ namespace LexicalAnalyzer
             this->match(Environment::OPERATOR, ")");
         }
         else if (this->tokenizer->Peek().GetTokenValue() == Environment::IDENTIFIER)
+        {
+            std::string id = this->tokenizer->Peek().GetLexeme();
+            int level;
             this->identifier(Environment::VARCONST, USE);
+            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
+            this->code.Push(new Instruction("lod", level, entry->GetOffSet()));
+        }
         else if (this->tokenizer->Peek().GetTokenValue() == Environment::NUMBER)
+        {
+            this->code.Push(new Instruction("lit", 0, boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme())));
             this->match(Environment::NUMBER);
+        }
         else
             throw ParserException(this->tokenizer->Peek(), Environment::OPERATOR, this->tokenizer->GetCurrentLine());
-    }
-
-    void Parser::term()
-    {
-        Environment::Token tmp("blank");
-        if (this->tokenizer->Peek().GetLexeme() == "+" || this->tokenizer->Peek().GetLexeme() == "-")
-            this->match(Environment::OPERATOR);
-        this->factor();
-        while (this->tokenizer->Peek().GetLexeme() == "*"
-            || this->tokenizer->Peek().GetLexeme() == "/"
-            || this->tokenizer->Peek().GetLexeme() == "DIV"
-            || this->tokenizer->Peek().GetLexeme() == "MOD"
-            )
-        {
-            tmp = this->tokenizer->Get();
-            if (this->debug) std::cerr << tmp << std::endl;
-            this->factor();
-        }
     }
 
     ParserException::ParserException(Environment::Token got, Environment::TOKEN_VALUE expected, int line, std::string msg)

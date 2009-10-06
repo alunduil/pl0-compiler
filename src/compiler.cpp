@@ -26,6 +26,7 @@
 #include <symboltable.h>
 #include <iostream>
 #include <tokenizer.h>
+#include <fstream>
 
 Compiler::Compiler(int argc, char *argv[])
 :options("Options")
@@ -40,6 +41,7 @@ void Compiler::parseOptions(int argc, char *argv[])
         ("help,h", "Produce help information.")
         ("debug,d", "Turn on the debug flag to have extremely verbose output.")
         ("filename,f", value<std::vector<std::string> >(), "The file to compile.")
+        ("output,o", value<std::string>(), "The output file")
     ;
 
     positional_options_description arguments;
@@ -58,7 +60,8 @@ void Compiler::Run()
     }
     if (this->vars.count("filename") <= 0)
         throw CompilerException();
-    LexicalAnalyzer::Parser parser(vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false);
+    LexicalAnalyzer::Parser parser(this->vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false);
+    std::ofstream out(((this->vars.count("output") > 0) ? this->vars["output"].as<std::string>().c_str() : "a.st"));
     try
     {
         parser.Parse();
@@ -67,4 +70,5 @@ void Compiler::Run()
     {
         std::cerr << e << std::endl;
     }
+    out << parser.Code();
 }

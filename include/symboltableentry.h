@@ -102,6 +102,20 @@ namespace Environment
             TOKEN_VALUE GetTokenValue() const;
 
             /**
+             * @brief Get the entry's value.
+             * @return Value of the entry.
+             */
+            int GetAddress() const;
+
+            /**
+             * @brief Set the entry's value.
+             * @param value The value of the entry.
+             *
+             * Change the value of the entry.
+             */
+            void SetAddress(const int value);
+
+            /**
              * @brief Set the type of the identifier.
              * @param tipe The tipe of the identifier.
              *
@@ -197,6 +211,7 @@ namespace Environment
             TOKEN_VALUE value;
             TOKEN_TYPE type;
             ID_TYPE tipe;
+            int address;
     };
 };
 

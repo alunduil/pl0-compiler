@@ -198,9 +198,10 @@ class Fuzzer:
         return random.choice('0123456789')
 
     def _getIdentifier(self, tipe, level):
-        if len(self._identifiers[tipe][level]) == 0:
+        realLevel = random.randint(0, level)
+        if len(self._identifiers[tipe][realLevel]) == 0:
             return False
-        identifier = random.sample(self._identifiers[tipe][level], 1)[0]
+        identifier = random.sample(self._identifiers[tipe][realLevel], 1)[0]
         self._incrementTokenCount()
         return identifier
 
@@ -358,8 +359,11 @@ class Fuzzer:
 
     def _generateFactor(self, level):
         output = ""
-        choice = random.randint(0, 2)
-        if (choice == 0):
+        maxChoice = 2
+        if (self._maxItems() - 50 < 0):
+            maxChoice = 1
+        choice = random.randint(0, maxChoice)
+        if (choice == 2):
             output += "("
             self._incrementTokenCount()
             output += self._generateExpression(level)
@@ -377,7 +381,7 @@ class Fuzzer:
             if tmp == False:
                 return ""
             output += tmp
-        elif (choice == 2):
+        elif (choice == 0):
             output += self._generateNumber()
         return output
 

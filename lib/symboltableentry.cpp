@@ -90,4 +90,14 @@ namespace Environment
     {
         return out << this->lexeme << ", " << this->value << ", " << this->type << ", " << this->offset;
     };
+
+    void SymbolTableEntry::SetAddress(const int address)
+    {
+        this->address = address;
+    }
+
+    int SymbolTableEntry::GetAddress() const
+    {
+        return this->address;
+    }
 };
