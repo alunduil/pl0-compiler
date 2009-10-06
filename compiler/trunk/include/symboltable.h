@@ -48,6 +48,12 @@ namespace Environment
             ~SymbolTable();
 
             /**
+             * @brief Count of elements in top level.
+             * @return The count of elements in the top level.
+             */
+            int Count() const;
+
+            /**
              * @brief Find an entry in the table based on the lexeme.
              * @param lexeme The unique identifier of the word representing the token.
              * @param level An inout parameter that returns the number of references to
@@ -139,11 +145,24 @@ namespace Environment
             {
                 public:
                     /**
+                     * @brief Constructor.
+                     *
+                     * Constructor.
+                     */
+                    InternalSymbolTable();
+
+                    /**
                      * @brief Destructor.
                      *
                      * Destructor.
                      */
                     ~InternalSymbolTable();
+
+                    /**
+                     * @brief Count of elements in table.
+                     * @return The number of elements at this level.
+                     */
+                    int Count() const;
 
                     /**
                     * @brief Find an entry in the table based on the lexeme.
@@ -216,6 +235,7 @@ namespace Environment
 
                 private:
                     std::map<std::string, SymbolTableEntry *> table;
+                    int count;
             };
         private:
             std::list<InternalSymbolTable *> tables;

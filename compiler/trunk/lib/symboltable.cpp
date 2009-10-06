@@ -35,6 +35,11 @@ namespace Environment
             this->tables.pop_back();
     }
 
+    int SymbolTable::Count() const
+    {
+        return this->tables.back()->Count();
+    }
+
     SymbolTableEntry * SymbolTable::Find(SymbolTableEntry &entry, int & level)
     {
         level = 0;
@@ -102,8 +107,14 @@ namespace Environment
 
     void SymbolTable::InternalSymbolTable::Insert(SymbolTableEntry &entry)
     {
+        entry.SetOffSet(this->count++);
         this->table[entry.GetLexeme()] = &entry;
     };
+
+    int SymbolTable::InternalSymbolTable::Count() const
+    {
+        return this->count;
+    }
 
     void SymbolTable::InternalSymbolTable::Insert(const std::string lexeme, TOKEN_VALUE value)
     {
@@ -122,6 +133,11 @@ namespace Environment
     {
         for (std::map<std::string, SymbolTableEntry *>::iterator i = this->table.begin(); i != this->table.end(); ++i)
             delete i->second;
+    }
+
+    SymbolTable::InternalSymbolTable::InternalSymbolTable()
+    {
+        this->count = 3;
     }
 };
 
