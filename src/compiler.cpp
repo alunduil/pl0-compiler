@@ -41,7 +41,8 @@ void Compiler::parseOptions(int argc, char *argv[])
     ("help,h", "Produce help information.")
     ("debug,d", "Turn on the debug flag to have extremely verbose output.")
     ("filename,f", value<std::vector<std::string> >(), "The file to compile.")
-    ("output,o", value<std::string>(), "The output file")
+    ("output,o", value<std::string>(), "The output file.")
+    ("errors,e", value<int>(), "The maximum number of errors.")
     ;
 
     positional_options_description arguments;
@@ -60,16 +61,16 @@ void Compiler::Run()
     }
     if (this->vars.count("filename") <= 0)
         throw CompilerException();
-    LexicalAnalyzer::Parser parser(this->vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false);
+    LexicalAnalyzer::Parser parser(this->vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false, (this->vars.count("errors") > 0) ? this->vars["errors"].as<int>() : 1024);
     std::ofstream out(((this->vars.count("output") > 0) ? this->vars["output"].as<std::string>().c_str() : "a.st"));
     try
     {
         parser.Parse();
     }
-    catch (LexicalAnalyzer::ParserException e)
+    catch (LexicalAnalyzer::ErrorQueueError e)
     {
-        std::cerr << e << std::endl;
+        throw e;
     }
     out << parser.Code();
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

@@ -95,7 +95,8 @@ class Fuzzer:
         return output
 
     def _maxItems(self):
-        return ((self._options.tokens - self._tokenCount)/4)/random.randint(4,16)
+        tmp = (self._options.tokens)/random.randint(max(self._tokenCount, 1),max(self._tokenCount, self._options.tokens))
+        return tmp
 
     def _haveMaxTokens(self):
         return (self._tokenCount > self._options.tokens - 1)
@@ -179,6 +180,18 @@ class Fuzzer:
                 output += self._generateCharacter()
             else:
                 output += self._generateDigit()
+        if (self._identifiers["functions"][level].count(output) > 0
+            or self._identifiers["variables"][level].count(output) > 0
+            or self._identifiers["constants"][level].count(output) > 0
+            ):
+            output = self._generateIdentifier(tipe, level)
+        if (output == "DO"
+            or output == "IF"
+            or output == "VAR"
+            or output == "END"
+            or output == "MOD"
+            ):
+            output = self._generateIdentifier(tipe, level)
         self._incrementTokenCount()
         self._identifiers[tipe][level].append(output)
         return output
@@ -199,15 +212,18 @@ class Fuzzer:
 
     def _getIdentifier(self, tipe, level):
         realLevel = random.randint(0, level)
-        if len(self._identifiers[tipe][realLevel]) == 0:
+        if len(self._identifiers[tipe][realLevel]) < 1:
             return False
         identifier = random.sample(self._identifiers[tipe][realLevel], 1)[0]
+        for l in range(realLevel, level):
+            if self._identifiers[tipe][l].count(identifier) > 0 and l < level:
+                return False
         self._incrementTokenCount()
         return identifier
 
     def _generateStatement(self, level):
         output = "\t"*level
-        choice = random.randint(0,7)
+        choice = random.randint(0,8)
         if (choice == 0):
             tmp = self._getIdentifier("variables", level)
             if tmp == False:
@@ -257,7 +273,7 @@ class Fuzzer:
             if tmp == False:
                 return ""
             output += tmp
-        elif (choice == 5):
+        elif (choice == 5 or choice == 7):
             output += "CALL "
             self._incrementTokenCount()
             tmp = self._getIdentifier("functions", level)
@@ -339,7 +355,7 @@ class Fuzzer:
             self._incrementTokenCount()
         output += self._generateFactor(level)
         factors = 0
-        while (factors < self._maxItems() and not self._haveMaxTokens()):
+        while (factors < max(self._maxItems(), 1)):
             choice = random.randint(0, 3)
             if (choice == 0):
                 output += " * "
@@ -359,10 +375,7 @@ class Fuzzer:
 
     def _generateFactor(self, level):
         output = ""
-        maxChoice = 2
-        if (self._maxItems() - 50 < 0):
-            maxChoice = 1
-        choice = random.randint(0, maxChoice)
+        choice = random.randint(0, 2)
         if (choice == 2):
             output += "("
             self._incrementTokenCount()
@@ -370,16 +383,13 @@ class Fuzzer:
             output += ")"
             self._incrementTokenCount()
         elif (choice == 1):
-            tipe = random.randint(0, 2)
-            if (choice == 0):
-                tipe = "functions"
-            elif (choice == 1):
+            tipe = "variables"
+            foo = random.randint(0, 1)
+            if (foo == 0):
                 tipe = "constants"
-            else:
-                tipe = "variables"
             tmp = self._getIdentifier(tipe, level)
             if tmp == False:
-                return ""
+                return self._generateNumber()
             output += tmp
         elif (choice == 0):
             output += self._generateNumber()
