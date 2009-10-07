@@ -26,6 +26,7 @@
 #include <token.h>
 #include <symboltableentry.h>
 #include <programstore.h>
+#include <errorqueue.h>
 
 namespace Environment
 {
@@ -42,12 +43,12 @@ namespace LexicalAnalyzer
             /**
             * @brief Constructor.
             */
-            Parser(std::string fileName, Environment::SymbolTable *table, bool debug = false);
+            Parser(std::string fileName, Environment::SymbolTable *table, bool debug = false, int maxErrors = 10);
 
             /**
             * @brief Constructor.
             */
-            Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false);
+            Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false, int maxErrors = 10);
 
             /**
              * @brief Return the string of code generated.
@@ -67,12 +68,7 @@ namespace LexicalAnalyzer
             bool debug;
             Environment::SymbolTable *table;
             ProgramStore code;
-
-            enum ID_PURPOSE
-            {
-                DECLARE,
-                USE
-            };
+            ErrorQueue errors;
 
             /**
              * @brief Parse a program.
@@ -160,29 +156,13 @@ namespace LexicalAnalyzer
 
             /**
              * @brief Match a token.
+             * @param token The token we matched.
+             * @param value The value we are looking for.
+             * @param lexeme The lexeme we might be looking for.
              */
-            void match(Environment::TOKEN_VALUE, std::string lexeme = "");
-    };
-
-    class ParserException
-    {
-        public:
-            ParserException(Environment::Token got, Environment::TOKEN_VALUE expected, int line, std::string msg = "");
-            friend std::ostream & operator<<(std::ostream & out, const ParserException & error)
-            {
-                out << "Got: " << error.got << std::endl;
-                out << "Expected: " << error.expected << std::endl;
-                out << "Line: " << error.line << std::endl;
-                return out << error.msg;
-            }
-
-        private:
-            std::string msg;
-            int line;
-            Environment::Token got;
-            Environment::TOKEN_VALUE expected;
+            bool match(Environment::Token &token, Environment::TOKEN_VALUE value, std::string lexeme = "");
     };
 }
 
 #endif // PARSER_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

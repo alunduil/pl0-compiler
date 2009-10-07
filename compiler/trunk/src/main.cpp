@@ -13,7 +13,14 @@
 int main(int argc, char *argv[])
 {
     Compiler application(argc, argv);
-    application.Run();
+    try
+    {
+        application.Run();
+    }
+    catch (...)
+    {
+        return 1;
+    }
 
     return 0;
 }
