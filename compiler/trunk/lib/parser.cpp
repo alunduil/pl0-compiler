@@ -53,6 +53,11 @@ namespace LexicalAnalyzer
 
     bool Parser::match(Environment::Token &token, Environment::TOKEN_VALUE value, std::string lexeme)
     {
+        /**
+         * @note This method performs phrase level error recovery on all tokens attempted to be
+         * matched by it.  This allows us to list errors even if an operator is missing or
+         * another error occurs.
+         */
         bool tmp = this->tokenizer->Peek().GetTokenValue() == value;
         token = this->tokenizer->Peek();
         if (!(lexeme.length() == 0 && tmp) && !(lexeme.length() > 0 && tmp && token.GetLexeme() == lexeme))
@@ -108,7 +113,11 @@ namespace LexicalAnalyzer
                 this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
             }
             while (this->tokenizer->Peek().GetLexeme() == ",");
-            this->match(tmp, Environment::OPERATOR, ";");
+            /**
+             * @note Panic mode error recovery.
+             */
+            while (!this->match(tmp, Environment::OPERATOR, ";"))
+                this->tokenizer->Ignore();
         }
         while (this->tokenizer->Peek().GetLexeme() == "VAR")
         {
@@ -120,7 +129,11 @@ namespace LexicalAnalyzer
                 this->identifier(Environment::VAR, DECLARE);
             }
             while (this->tokenizer->Peek().GetLexeme() == ",");
-            this->match(tmp, Environment::OPERATOR, ";");
+            /**
+             * @note Panic mode error recovery.
+             */
+            while (!this->match(tmp, Environment::OPERATOR, ";"))
+                this->tokenizer->Ignore();
         }
         while (this->tokenizer->Peek().GetLexeme() == "PROCEDURE")
         {

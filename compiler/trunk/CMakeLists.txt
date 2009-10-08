@@ -1,4 +1,4 @@
-PROJECT(brandtal.proj1)
+PROJECT(compiler)
 
 cmake_minimum_required(VERSION 2.6)
 
