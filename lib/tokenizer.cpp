@@ -125,11 +125,14 @@ namespace LexicalAnalyzer
                 case '\n':
                     ++this->line;
                 case ' ':
+                case '\r': /// @note Thanks Steve! </sarcasm>
                 case '\t':
                     this->in->get();
                     break;
                 case '{':
-                    while (this->in->get() != '}');
+                    while (this->in->peek() != '}')
+                        if (this->in->get() == '\n') ++this->line;
+                    this->in->get();
                     break;
                 case ':':
                     tmp << static_cast<char>(this->in->get());
@@ -178,6 +181,7 @@ namespace LexicalAnalyzer
                         tmp << foo;
                         ret.SetLexeme(tmp.str());
                         ret.SetTokenValue(Environment::NUMBER);
+                        return ret;
                     }
                     else if (std::isalnum(this->in->peek()))
                     {
@@ -197,11 +201,12 @@ namespace LexicalAnalyzer
                             ret.SetSymbolTableEntry(entry);
                             ret.SetLevel(level);
                         }
+                        return ret;
                     }
-                    return ret;
+                    break; /// @todo Character not in alphabet . . .
             }
         }
         return ret;
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;
