@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS, "-O2 -Wall -pedantic -g0")
 set(CMAKE_C_FLAGS_DEBUG, "-O0 -g3 -Wall -pedantic -pg")
 set(CMAKE_CXX_FLAGS_DEBUG, "-O0 -g3 -Wall -pedantic -pg")
 
+# add_definitions(-DNFLEX)
+
 include_directories(include)
 
 ADD_SUBDIRECTORY(lib)

@@ -36,11 +36,41 @@ namespace LexicalAnalyzer
     std::string ErrorQueue::castTokenValue(const Environment::TOKEN_VALUE &expected)
     {
         return (expected == Environment::IDENTIFIER) ? "identifier" :
-            (expected == Environment::KEYWORD) ? "keyword" :
-            (expected == Environment::NUMBER) ? "number" :
-            (expected == Environment::OPERATOR) ? "operator" :
-            (expected == Environment::GARBAGE) ? "garbage" :
-            (expected == Environment::EOFL) ? "eof" : "";
+               (expected == Environment::ASSIGNMENT) ? ":=" :
+               (expected == Environment::NUMBER) ? "number" :
+               (expected == Environment::IBEGIN) ? "begin" :
+               (expected == Environment::GARBAGE) ? "garbage" :
+               (expected == Environment::EOFL) ? "eof" :
+               (expected == Environment::CALL) ? "call" :
+               (expected == Environment::COMMA) ? "," :
+               (expected == Environment::CONST) ? "const" :
+               (expected == Environment::DIV) ? "div" :
+               (expected == Environment::DIVIDE) ? "/" :
+               (expected == Environment::DO) ? "do" :
+               (expected == Environment::DOT) ? "." :
+               (expected == Environment::END) ? "end" :
+               (expected == Environment::EQUALS) ? "=" :
+               (expected == Environment::GREATERTHAN) ? ">" :
+               (expected == Environment::GREATERTHANEQUAL) ? ">=" :
+               (expected == Environment::IF) ? "if" :
+               (expected == Environment::LEFTPAREN) ? "(" :
+               (expected == Environment::LESSTHAN) ? "<" :
+               (expected == Environment::LESSTHANEQUAL) ? "<=" :
+               (expected == Environment::MINUS) ? "-" :
+               (expected == Environment::MOD) ? "mod" :
+               (expected == Environment::MULTIPLY) ? "*" :
+               (expected == Environment::NOTEQUAL) ? "<>" :
+               (expected == Environment::ODD) ? "odd" :
+               (expected == Environment::PLUS) ? "+" :
+               (expected == Environment::PRINT) ? "print" :
+               (expected == Environment::PROCEDURE) ? "procedure" :
+               (expected == Environment::PROGRAM) ? "program" :
+               (expected == Environment::READ) ? "read" :
+               (expected == Environment::RIGHTPAREN) ? ")" :
+               (expected == Environment::SEMICOLON) ? ";" :
+               (expected == Environment::THEN) ? "then" :
+               (expected == Environment::VAR) ? "var" :
+               (expected == Environment::WHILE) ? "while" : "NOT FOUND!";
     }
 
     void ErrorQueue::checkCount()
@@ -60,10 +90,10 @@ namespace LexicalAnalyzer
 
     std::string ErrorQueue::castIdType(const Environment::ID_TYPE &expected)
     {
-        return (expected == Environment::VAR) ? "VAR" :
-            (expected == Environment::CONST) ? "CONST" :
-            (expected == Environment::PROCEDURE) ? "PROCEDURE" :
-            (expected == Environment::VARCONST) ? "VAR or CONST" : "";
+        return (expected == Environment::VAR_ID) ? "VAR" :
+               (expected == Environment::CONST_ID) ? "CONST" :
+               (expected == Environment::PROC_ID) ? "PROCEDURE" :
+               (expected == Environment::VAR_ID | Environment::CONST_ID) ? "VAR or CONST" : "";
     }
 
     void ErrorQueue::Push(const Environment::ID_TYPE &got, const Environment::ID_TYPE &expected, const int &line, const std::string &msg)
@@ -79,3 +109,4 @@ namespace LexicalAnalyzer
         this->maxErrors = maxErrors;
     }
 }
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

@@ -28,13 +28,24 @@
 #include <symboltableentry.h>
 #include <iostream>
 #include <vector>
+#include <boost/tuple/tuple.hpp>
+
+#ifndef NFLEX
+#include <FlexLexer.h>
+Environment::Token *yytoken = NULL;
+Environment::SymbolTable *yysymtab = NULL;
+#endif
 
 namespace LexicalAnalyzer
 {
     Tokenizer::Tokenizer(const std::string fileName, Environment::SymbolTable *table)
     {
         this->table = table;
+#ifdef NFLEX
         this->addKeywords();
+#else
+        yysymtab = table;
+#endif
         this->in = new std::ifstream(fileName.c_str());
         this->buffer.push_back(this->get());
         this->current = this->buffer.begin();
@@ -44,40 +55,41 @@ namespace LexicalAnalyzer
     Tokenizer::Tokenizer(std::istream &in, Environment::SymbolTable *table)
     {
         this->table = table;
+#ifdef NFLEX
         this->addKeywords();
+#else
+        yysymtab = table;
+#endif
         this->in = &in;
         this->buffer.push_back(this->get());
         this->current = this->buffer.begin();
         this->line = 1;
     }
 
+#ifdef NFLEX
     void Tokenizer::addKeywords()
     {
-        Environment::SymbolTableEntry entry("blank");
-        std::vector<std::string> keywords;
-        keywords.push_back("BEGIN");
-        keywords.push_back("CALL");
-        keywords.push_back("CONST");
-        keywords.push_back("DIV");
-        keywords.push_back("DO");
-        keywords.push_back("END");
-        keywords.push_back("IF");
-        keywords.push_back("MOD");
-        keywords.push_back("ODD");
-        keywords.push_back("PROCEDURE");
-        keywords.push_back("PROGRAM");
-        keywords.push_back("PRINT");
-        keywords.push_back("READ");
-        keywords.push_back("THEN");
-        keywords.push_back("VAR");
-        keywords.push_back("WHILE");
-        for (std::vector<std::string>::iterator i = keywords.begin(); i != keywords.end(); ++i)
-        {
-            entry.SetLexeme(*i);
-            entry.SetTokenValue(Environment::KEYWORD);
-            this->table->Insert(entry);
-        }
+        std::vector<boost::tuple<std::string, Environment::TOKEN_VALUE> > keywords;
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("BEGIN", Environment::IBEGIN));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("CALL", Environment::CALL));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("CONST", Environment::CONST));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("DIV", Environment::DIV));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("DO", Environment::DO));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("END", Environment::END));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("IF", Environment::IF));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("MOD", Environment::MOD));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("ODD", Environment::ODD));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("PROCEDURE", Environment::PROCEDURE));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("PROGRAM", Environment::PROGRAM));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("PRINT", Environment::PRINT));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("READ", Environment::READ));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("THEN", Environment::THEN));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("VAR", Environment::VAR));
+        keywords.push_back(boost::tuple<std::string, Environment::TOKEN_VALUE>("WHILE", Environment::WHILE));
+        for (std::vector<boost::tuple<std::string, Environment::TOKEN_VALUE> >::iterator i = keywords.begin(); i != keywords.end(); ++i)
+            this->table->Insert(boost::get<0>(*i), boost::get<1>(*i));
     }
+#endif
 
     Environment::Token Tokenizer::Get()
     {
@@ -113,6 +125,7 @@ namespace LexicalAnalyzer
         return this->line;
     }
 
+#ifdef NFLEX
     Environment::Token Tokenizer::get()
     {
         std::stringstream tmp;
@@ -142,36 +155,83 @@ namespace LexicalAnalyzer
                     {
                         tmp << static_cast<char>(this->in->get());
                         ret.SetLexeme(tmp.str());
-                        ret.SetTokenValue(Environment::OPERATOR);
+                        ret.SetTokenValue(Environment::ASSIGNMENT);
                     }
                     return ret;
                 case '+':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::PLUS);
+                    return ret;
                 case '-':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::MINUS);
+                    return ret;
                 case '*':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::MULTIPLY);
+                    return ret;
                 case '/':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::DIVIDE);
+                    return ret;
                 case '=':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::EQUALS);
+                    return ret;
                 case '(':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::LEFTPAREN);
+                    return ret;
                 case ')':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::RIGHTPAREN);
+                    return ret;
                 case ',':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::COMMA);
+                    return ret;
                 case ';':
+                    tmp << static_cast<char>(this->in->get());
+                    ret.SetLexeme(tmp.str());
+                    ret.SetTokenValue(Environment::SEMICOLON);
+                    return ret;
                 case '.':
                     tmp << static_cast<char>(this->in->get());
                     ret.SetLexeme(tmp.str());
-                    ret.SetTokenValue(Environment::OPERATOR);
+                    ret.SetTokenValue(Environment::DOT);
                     return ret;
                 case '<':
                     tmp << static_cast<char>(this->in->get());
-                    if (this->in->peek() == '>' || this->in->peek() == '=')
+                    ret.SetTokenValue(Environment::LESSTHAN);
+                    if (this->in->peek() == '>')
+                    {
                         tmp << static_cast<char>(this->in->get());
+                        ret.SetTokenValue(Environment::NOTEQUAL);
+                    }
+                    else if (this->in->peek() == '=')
+                    {
+                        tmp << static_cast<char>(this->in->get());
+                        ret.SetTokenValue(Environment::LESSTHANEQUAL);
+                    }
                     ret.SetLexeme(tmp.str());
-                    ret.SetTokenValue(Environment::OPERATOR);
                     return ret;
                 case '>':
                     tmp << static_cast<char>(this->in->get());
+                    ret.SetTokenValue(Environment::GREATERTHAN);
                     if (this->in->peek() == '=')
+                    {
                         tmp << static_cast<char>(this->in->get());
+                        ret.SetTokenValue(Environment::GREATERTHANEQUAL);
+                    }
                     ret.SetLexeme(tmp.str());
-                    ret.SetTokenValue(Environment::OPERATOR);
                     return ret;
                 default:
                     if (std::isdigit(this->in->peek()))
@@ -208,5 +268,15 @@ namespace LexicalAnalyzer
         }
         return ret;
     }
+#else
+    Environment::Token Tokenizer::get()
+    {
+        static std::stringstream bit_bucket;
+        if (yytoken) delete yytoken;
+        static yyFlexLexer *scanner = new yyFlexLexer(this->in, &bit_bucket);
+        while (scanner->yylex() == Environment::COMMENT) delete yytoken;
+        return *yytoken;
+    }
+#endif
 }
 // kate: indent-mode cstyle; space-indent on; indent-width 4;
