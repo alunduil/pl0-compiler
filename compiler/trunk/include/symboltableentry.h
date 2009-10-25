@@ -51,10 +51,9 @@ namespace Environment
      */
     enum ID_TYPE
     {
-        CONST = 1024,
-        VAR,
-        PROCEDURE,
-        VARCONST
+        CONST_ID = 1,
+        VAR_ID = 2,
+        PROC_ID = 4
     };
 
     /**

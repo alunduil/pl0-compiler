@@ -158,11 +158,11 @@ namespace LexicalAnalyzer
              * @brief Match a token.
              * @param token The token we matched.
              * @param value The value we are looking for.
-             * @param lexeme The lexeme we might be looking for.
+             * @param lexeme Optional lexeme to match on.
              */
-            bool match(Environment::Token &token, Environment::TOKEN_VALUE value, std::string lexeme = "");
+            bool match(Environment::Token &token, Environment::TOKEN_VALUE value, std::string lexem = "");
     };
 }
 
 #endif // PARSER_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4;
+// kate: indent-mode cstyle; space-indent on; indent-width 4; 

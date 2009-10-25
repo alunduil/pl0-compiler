@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    Definition of the tokenizer scanner thingy.
+    Copyright (C) 2009  Alex Brandt
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -113,10 +113,12 @@ namespace LexicalAnalyzer
              */
             Environment::Token get();
 
+#ifdef NFLEX
             /**
              * @brief Add the keywords to the symbol table.
              */
             void addKeywords();
+#endif
     };
 }
 
