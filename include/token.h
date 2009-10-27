@@ -99,7 +99,7 @@ namespace Environment
              * @brief Set the lexeme for the token.
              * @param lexeme The new value of the lexeme for this token.
              */
-            void SetLexeme(const std::string lexeme);
+            void SetLexeme(const std::string &lexeme);
 
             /**
              * @brief Get the token value.
@@ -111,7 +111,7 @@ namespace Environment
              * @brief Set the token value.
              * @param value TOKEN_VALUE the token should take.
              */
-            void SetTokenValue(const TOKEN_VALUE);
+            void SetTokenValue(const TOKEN_VALUE &value);
 
             /**
              * @brief Get the SymbolTableEntry pointer.
@@ -135,7 +135,7 @@ namespace Environment
              * @brief Set the lexical level.
              * @param level The level to set this token to.
              */
-            void SetLevel(const int level);
+            void SetLevel(const int &level);
 
             /**
              * @brief Compare two Tokens and see if they're equal.
@@ -180,4 +180,4 @@ namespace Environment
 }
 
 #endif // TOKEN_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

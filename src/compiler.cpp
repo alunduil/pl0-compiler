@@ -59,18 +59,21 @@ void Compiler::Run()
         std::cerr << options << std::endl;
         exit(EXIT_FAILURE);
     }
-    if (this->vars.count("filename") <= 0)
-        throw CompilerException();
-    LexicalAnalyzer::Parser parser(this->vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false, (this->vars.count("errors") > 0) ? this->vars["errors"].as<int>() : 1024);
-    std::ofstream out(((this->vars.count("output") > 0) ? this->vars["output"].as<std::string>().c_str() : "a.st"));
+
+    if (this->vars.count("filename") <= 0) throw CompilerException();
+    LexicalAnalyzer::Parser parser(this->vars["filename"].as<std::vector<std::string> >()[0], new Environment::SymbolTable(), (this->vars.count("debug") > 0) ? true : false, (this->vars.count("errors") > 0) ? this->vars["errors"].as<int>() : 100);
     try
     {
         parser.Parse();
+        if (parser.HaveErrors())
+            throw new LexicalAnalyzer::ErrorQueueError();
+        std::ofstream out(((this->vars.count("output") > 0) ? this->vars["output"].as<std::string>().c_str() : "a.st"));
+        out << parser.Code();
+        out.close();
     }
     catch (LexicalAnalyzer::ErrorQueueError e)
     {
         throw e;
     }
-    out << parser.Code();
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

@@ -22,18 +22,20 @@
 #include <token.h>
 #include <iostream>
 
+#define DEBUG(A) std::cerr << __FILE__ << ":" << __LINE__ << ": debug: " << (A) << std::endl;
+
 namespace LexicalAnalyzer
 {
     void ErrorQueue::Push(const Environment::Token &got, const Environment::TOKEN_VALUE &expected, const int &line, const std::string &msg)
     {
 
-        std::cerr << line << ": error: expected `" << this->castTokenValue(expected) << "' but got `" << got << "' token";
+        std::cerr << line << ": error: expected `" << this->castTokenValue(expected) << "' but got `" << got.GetLexeme() << "' token";
         if (msg.length() > 0) std::cerr << ": " << msg;
         std::cerr << std::endl;
         this->checkCount();
     }
 
-    std::string ErrorQueue::castTokenValue(const Environment::TOKEN_VALUE &expected)
+    std::string ErrorQueue::castTokenValue(const Environment::TOKEN_VALUE &expected) const
     {
         return (expected == Environment::IDENTIFIER) ? "identifier" :
                (expected == Environment::ASSIGNMENT) ? ":=" :
@@ -75,6 +77,7 @@ namespace LexicalAnalyzer
 
     void ErrorQueue::checkCount()
     {
+        this->hasErrors = true;
         if (++this->count == this->maxErrors) throw new ErrorQueueError();
     }
 
@@ -88,7 +91,7 @@ namespace LexicalAnalyzer
         this->checkCount();
     }
 
-    std::string ErrorQueue::castIdType(const Environment::ID_TYPE &expected)
+    std::string ErrorQueue::castIdType(const Environment::ID_TYPE &expected) const
     {
         return (expected == Environment::VAR_ID) ? "VAR" :
                (expected == Environment::CONST_ID) ? "CONST" :
@@ -105,8 +108,13 @@ namespace LexicalAnalyzer
     }
 
     ErrorQueue::ErrorQueue(int maxErrors)
+            : count(0), hasErrors(false), maxErrors(maxErrors)
     {
-        this->maxErrors = maxErrors;
+    }
+
+    bool ErrorQueue::HaveErrors() const
+    {
+        return this->hasErrors;
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

@@ -1,14 +1,18 @@
+%option c++
+%option yylineno
+%option noyywrap
+%option caseless
+
 %{
+
 #include <token.h>
 #include <symboltable.h>
 #include <symboltableentry.h>
 
 extern Environment::Token *yytoken;
 extern Environment::SymbolTable *yysymtab;
-%}
 
-%option noyywrap
-%option caseless
+%}
 
 letter      [a-zA-Z]
 digit       [0-9]

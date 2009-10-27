@@ -74,7 +74,7 @@ namespace Environment
              *
              * Change the name or lexeme of this entry in the symbol table.
              */
-            void SetLexeme(const std::string lexeme);
+            void SetLexeme(const std::string &lexeme);
 
             /**
              * @brief Get the lexeme for this entry.
@@ -90,7 +90,7 @@ namespace Environment
              *
              * Change the type of token of this entry in the symbol table.
              */
-            void SetTokenValue(const TOKEN_VALUE value);
+            void SetTokenValue(const TOKEN_VALUE &value);
 
             /**
              * @brief Get the token's type.
@@ -112,15 +112,15 @@ namespace Environment
              *
              * Change the value of the entry.
              */
-            void SetAddress(const int value);
+            void SetAddress(const int &value);
 
             /**
              * @brief Set the type of the identifier.
-             * @param tipe The tipe of the identifier.
+             * @param type The type of the identifier.
              *
-             * Change the tipe of the identifer.
+             * Change the type of the identifer.
              */
-            void SetIdentifierType(const ID_TYPE tipe);
+            void SetIdentifierType(const ID_TYPE &type);
 
             /**
              * @brief Get the type of the identifier.
@@ -134,7 +134,7 @@ namespace Environment
              *
              * Change the offset of the value's position in the ARI.
              */
-            void SetOffSet(const int offset);
+            void SetOffSet(const int &offset);
 
             /**
              * @brief Get the ARI addressing offset.
@@ -151,7 +151,7 @@ namespace Environment
              *
              * Set the type of the entry to the type passed.
              */
-            void SetType(const TOKEN_TYPE type);
+            void SetType(const TOKEN_TYPE &type);
 
             /**
              * @brief Get the type of the entry.
@@ -169,7 +169,7 @@ namespace Environment
              *
              * Construct Symbol Table Entry.
              */
-            SymbolTableEntry(const std::string lexeme, const int offset = 0, const TOKEN_VALUE value = IDENTIFIER);
+            SymbolTableEntry(const std::string &lexeme, const int &offset = 0, const TOKEN_VALUE &value = IDENTIFIER);
 
             /**
              * @brief Equivalency Operator
@@ -208,11 +208,11 @@ namespace Environment
             std::string lexeme;
             int offset;
             TOKEN_VALUE value;
-            TOKEN_TYPE type;
-            ID_TYPE tipe;
+            TOKEN_TYPE tokenType;
+            ID_TYPE idType;
             int address;
     };
 };
 
 #endif // SYMBOLTABLEENTRY_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

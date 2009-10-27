@@ -26,11 +26,8 @@
 namespace Environment
 {
     Token::Token(std::string lexeme, TOKEN_VALUE value, SymbolTableEntry *entry, int level)
+    :lexeme(lexeme), value(value), entry(entry), level(level)
     {
-        this->lexeme = lexeme;
-        this->value = value;
-        this->entry = entry;
-        this->level = level;
     }
 
     Token::Token()
@@ -57,12 +54,12 @@ namespace Environment
         return this->value;
     }
 
-    void Token::SetLevel(const int level)
+    void Token::SetLevel(const int &level)
     {
         this->level = level;
     }
 
-    void Token::SetLexeme(const std::string lexeme)
+    void Token::SetLexeme(const std::string &lexeme)
     {
         this->lexeme = lexeme;
     }
@@ -72,7 +69,7 @@ namespace Environment
         this->entry = entry;
     }
 
-    void Token::SetTokenValue(const TOKEN_VALUE value)
+    void Token::SetTokenValue(const TOKEN_VALUE &value)
     {
         this->value = value;
     }
@@ -92,4 +89,4 @@ namespace Environment
         return out << "< " << this->lexeme << ", " << this->value << ", " << this->entry << ", " << this->level << " >";
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;
