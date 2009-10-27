@@ -23,22 +23,19 @@
 
 namespace Environment
 {
-    SymbolTableEntry::SymbolTableEntry(const std::string lexeme, const int offset, TOKEN_VALUE value)
+    SymbolTableEntry::SymbolTableEntry(const std::string &lexeme, const int &offset, const TOKEN_VALUE &value)
+    :lexeme(lexeme), offset(offset), value(value), tokenType(REAL)
     {
-        this->lexeme = lexeme;
-        this->offset = offset;
-        this->value = value;
-        this->type = REAL;
     }
 
     ID_TYPE SymbolTableEntry::GetIdentifierType() const
     {
-        return this->tipe;
+        return this->idType;
     }
 
-    void SymbolTableEntry::SetIdentifierType(const ID_TYPE tipe)
+    void SymbolTableEntry::SetIdentifierType(const ID_TYPE &type)
     {
-        this->tipe = tipe;
+        this->idType = type;
     }
 
     std::string SymbolTableEntry::GetLexeme() const
@@ -58,27 +55,27 @@ namespace Environment
 
     TOKEN_TYPE SymbolTableEntry::GetType() const
     {
-        return this->type;
+        return this->tokenType;
     }
 
-    void SymbolTableEntry::SetLexeme(const std::string lexeme)
+    void SymbolTableEntry::SetLexeme(const std::string &lexeme)
     {
         this->lexeme = lexeme;
     }
 
-    void SymbolTableEntry::SetOffSet(const int offset)
+    void SymbolTableEntry::SetOffSet(const int &offset)
     {
         this->offset = offset;
     }
 
-    void SymbolTableEntry::SetTokenValue(const TOKEN_VALUE token)
+    void SymbolTableEntry::SetTokenValue(const TOKEN_VALUE &token)
     {
         this->value = token;
     }
 
-    void SymbolTableEntry::SetType(const TOKEN_TYPE type)
+    void SymbolTableEntry::SetType(const TOKEN_TYPE &type)
     {
-        this->type = type;
+        this->tokenType = type;
     }
 
     bool SymbolTableEntry::operator==(const SymbolTableEntry &that) const
@@ -88,10 +85,10 @@ namespace Environment
 
     std::ostream & SymbolTableEntry::print(std::ostream & out) const
     {
-        return out << this->lexeme << ", " << this->value << ", " << this->type << ", " << this->offset;
+        return out << this->lexeme << ", " << this->value << ", " << this->tokenType << ", " << this->offset;
     };
 
-    void SymbolTableEntry::SetAddress(const int address)
+    void SymbolTableEntry::SetAddress(const int &address)
     {
         this->address = address;
     }
@@ -101,4 +98,4 @@ namespace Environment
         return this->address;
     }
 };
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

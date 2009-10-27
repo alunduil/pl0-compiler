@@ -43,12 +43,12 @@ namespace LexicalAnalyzer
             /**
             * @brief Constructor.
             */
-            Parser(std::string fileName, Environment::SymbolTable *table, bool debug = false, int maxErrors = 10);
+            Parser(std::string fileName, Environment::SymbolTable *table, bool debug = false, int maxErrors = 100);
 
             /**
             * @brief Constructor.
             */
-            Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false, int maxErrors = 10);
+            Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false, int maxErrors = 100);
 
             /**
              * @brief Return the string of code generated.
@@ -56,12 +56,17 @@ namespace LexicalAnalyzer
             std::string Code();
 
             /**
-            * @brief Parse the input.
-            *
-            * Parse the input and if the debug flag is set print out the tree as it
-            * is generated.
-            */
+             * @brief Parse the input.
+             *
+             * Parse the input and if the debug flag is set print out the tree as it
+             * is generated.
+             */
             void Parse();
+
+            /**
+             * @brief Tell the caller whether errors were detected during compilation.
+             */
+            bool HaveErrors() const;
 
         private:
             Tokenizer *tokenizer;
@@ -147,7 +152,7 @@ namespace LexicalAnalyzer
             /**
              * @brief IDENTIFIER
              */
-            void identifier(Environment::ID_TYPE tipe, ID_PURPOSE declaration = USE);
+            void identifier(Environment::ID_TYPE type, ID_PURPOSE declaration = USE);
 
             /**
              * @brief Read number
@@ -158,11 +163,10 @@ namespace LexicalAnalyzer
              * @brief Match a token.
              * @param token The token we matched.
              * @param value The value we are looking for.
-             * @param lexeme Optional lexeme to match on.
              */
-            bool match(Environment::Token &token, Environment::TOKEN_VALUE value, std::string lexem = "");
+            bool match(Environment::Token &token, Environment::TOKEN_VALUE value);
     };
 }
 
 #endif // PARSER_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

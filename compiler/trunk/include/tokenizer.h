@@ -112,15 +112,8 @@ namespace LexicalAnalyzer
              * @return Token.
              */
             Environment::Token get();
-
-#ifdef NFLEX
-            /**
-             * @brief Add the keywords to the symbol table.
-             */
-            void addKeywords();
-#endif
     };
 }
 
 #endif // TOKENIZER_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

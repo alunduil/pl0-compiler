@@ -24,13 +24,11 @@
 namespace LexicalAnalyzer
 {
     Instruction::Instruction(std::string function, int level, int address)
+            : function(function), level(level), address(address)
     {
-        this->function = function;
-        this->level = level;
-        this->address = address;
     }
 
-    void Instruction::SetAddress(const int address)
+    void Instruction::SetAddress(const int &address)
     {
         this->address = address;
     }
@@ -40,7 +38,7 @@ namespace LexicalAnalyzer
         return this->function + " " + boost::lexical_cast<std::string, int>(this->level) + " " + boost::lexical_cast<std::string, int>(this->address) + "\n";
     }
 
-    void Instruction::SetFunction(const std::string function)
+    void Instruction::SetFunction(const std::string &function)
     {
         this->function = function;
     }

@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    A particular instruction for an fsti stack machine interpreter.
+    Copyright (C) 2009 Alex Brandt
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ namespace LexicalAnalyzer
              * @brief Set the function of the instruction.
              * @param function The function to store.
              */
-            void SetFunction(const std::string);
+            void SetFunction(const std::string & function);
 
             /**
              * @brief Get the level of the instruction.
@@ -58,7 +58,7 @@ namespace LexicalAnalyzer
              * @brief Set the level of the instruction.
              * @param level The level to store.
              */
-            void SetLevel(const int level);
+            void SetLevel(const int &level);
 
             /**
              * @brief Get the address of the instruction.
@@ -70,7 +70,7 @@ namespace LexicalAnalyzer
              * @brief Set the address of the instruction.
              * @param address The address to store.
              */
-            void SetAddress(const int address);
+            void SetAddress(const int &address);
 
             /**
              * @brief Convert to string.
@@ -85,4 +85,4 @@ namespace LexicalAnalyzer
 }
 
 #endif // INSTRUCTION_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;
