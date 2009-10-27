@@ -39,6 +39,7 @@ This program utilizes the following:
   3) Boost Program Options
   4) STL vector
   5) Boost Lexical Cast
+  6) FLEX (Lexical Analyzer Generator)
 
 ****************************
 * Program Input and Output *
@@ -59,38 +60,38 @@ Ouput ::
   Examples:
 
     $ src/pl0 -o test01.st test01.p
-    2: error: expected `operator' but got `< 723, 258, 0, 0 >' token: =
-    3: error: expected `operator' but got `< CONST, 257, 0x1131310, 0 >' token: ;
-    3: error: expected `operator' but got `< IM, 256, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< =, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< +, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< 138, 258, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< ,, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< I855, 256, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< =, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< +, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< 27202, 258, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< ,, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< K4, 256, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< =, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< -, 259, 0, 0 >' token: ;
-    3: error: expected `operator' but got `< 6, 258, 0, 0 >' token: ;
+    1: error: expected `=' but got `723' token
+    1: error: expected `;' but got `CONST' token
+    1: error: expected `;' but got `IM' token
+    1: error: expected `;' but got `=' token
+    1: error: expected `;' but got `+' token
+    1: error: expected `;' but got `138' token
+    1: error: expected `;' but got `,' token
+    1: error: expected `;' but got `I855' token
+    1: error: expected `;' but got `=' token
+    1: error: expected `;' but got `+' token
+    1: error: expected `;' but got `27202' token
+    1: error: expected `;' but got `,' token
+    1: error: expected `;' but got `K4' token
+    1: error: expected `;' but got `=' token
+    1: error: expected `;' but got `-' token
+    1: error: expected `;' but got `6' token
 
   With the debugging flag set the entire parsing is shown in full detail to
   find problems with the compiler itself if they are suspected.
 
     $ src/pl0 -de 3 -o test01.st test01.p
-    < PROGRAM, 257, 0x2412650, 0 >
-    < CONST, 257, 0x24122d0, 0 >
-    < X, 256, 0, 0 >
-    2: error: expected `operator' but got `< 723, 258, 0, 0 >' token: =
-    < 723, 258, 0, 0 >
-    < ,, 259, 0, 0 >
-    < S5D107Q4, 256, 0, 0 >
-    < =, 259, 0, 0 >
-    < 9855408, 258, 0, 0 >
-    3: error: expected `operator' but got `< CONST, 257, 0x24122d0, 0 >' token: ;
-    3: error: expected `operator' but got `< IM, 256, 0, 0 >' token: ;
+    < PROGRAM, 268, 0, 0 >
+    < CONST, 260, 0, 0 >
+    < X, 256, 0, 1 >
+    1: error: expected `=' but got `723' token
+    < 723, 285, 0, 0 >
+    < ,, 283, 0, 0 >
+    < S5D107Q4, 256, 0, 1 >
+    < =, 280, 0, 0 >
+    < 9855408, 285, 0, 0 >
+    1: error: expected `;' but got `CONST' token
+    1: error: expected `;' but got `IM' token
 
 **************
 * File Index *
@@ -147,6 +148,10 @@ lib/parser.cpp
 lib/programstore.cpp
   - ProgramStore class declaration.
     * Implementation of the ProgramStore class.
+
+lib/scanner.l
+  - Flex definition file to generate a lexical analyzer.
+    * Definition of regular patterns and other flex necessities.
 
 lib/symboltable.cpp
   - SymbolTable class declaration.
@@ -243,7 +248,7 @@ echo "3 -3" | fsti test02.st
 * Known Bugs *
 **************
 
- * CONST identifiers are capable of being assigned to.
+ * Line numbers are not getting sent from flex correctly for error handling purposes.
 
 No other currently known issues exist within the application.
 
