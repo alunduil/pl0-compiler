@@ -7,7 +7,11 @@
 
 #include <token.h>
 #include <symboltable.h>
-#include <symboltableentry.h>
+
+namespace Environment
+{
+    class SymbolTableEntry;
+}
 
 extern Environment::Token *yytoken;
 extern Environment::SymbolTable *yysymtab;

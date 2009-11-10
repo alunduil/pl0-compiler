@@ -21,10 +21,12 @@
 #ifndef PROGRAMSTORE_H
 #define PROGRAMSTORE_H
 
+#include <string>
 #include <vector>
-#include <instruction.h>
 
-namespace LexicalAnalyzer
+#include "../include/instruction.h"
+
+namespace Generator
 {
     class ProgramStore
     {
@@ -33,13 +35,13 @@ namespace LexicalAnalyzer
              * @brief Push instruction.
              * @param instruction The Instruction to push on the stack.
              */
-            void Push(const Instruction &instruction);
+            void Push(const Instruction & instruction);
 
             /**
              * @brief Push Instruction.
              * @param instruction The Instruction to push on the stack.
              */
-            void Push(const Instruction *instruction);
+            void Push(const Instruction * instruction);
 
             /**
              * @brief Get the address of the top of the stack.
@@ -52,7 +54,7 @@ namespace LexicalAnalyzer
              * @param address The address in the stack.
              * @return Reference to the instruction.
              */
-            Instruction & operator[](const int address);
+            Instruction & operator[](const int & address);
 
             /**
              * @brief Convert the instructions to a string.
@@ -65,4 +67,4 @@ namespace LexicalAnalyzer
 }
 
 #endif // PROGRAMSTORE_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

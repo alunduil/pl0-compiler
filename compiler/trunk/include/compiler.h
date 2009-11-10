@@ -28,6 +28,8 @@ class Compiler
     public:
         /**
          * @brief Constructor.
+         * @param argc Count of the arguments.
+         * @param argv The arguments vector.
          */
         Compiler(int argc, char *argv[]);
 
@@ -37,17 +39,38 @@ class Compiler
         void Run();
 
     private:
-        boost::program_options::variables_map vars;
-        boost::program_options::options_description options;
+        bool debug;
+        bool verbose;
+        int errors;
+        bool warnings;
 
         /**
          * @brief Parse the command line options.
+         * @param argc The count of the arguments.
+         * @param argv The argument vector.
+         * @param description The options description pointer.
+         * @return A variables map containing all of the variables parsed.
          */
-        void parseOptions(int argc, char *argv[]);
+        boost::program_options::variables_map parseOptions(int argc, char *argv[], boost::program_options::options_description * description = new boost::program_options::options_description("Options: "));
 };
 
-class CompilerException
+class CompilerError
 {
+    public:
+        std::string GetMessage() const;
+        CompilerError(const std::string & msg);
+    private:
+        std::string message;
+};
+
+class CompilerArgumentError : public CompilerError
+{
+    public:
+        boost::program_options::options_description GetDescription() const;
+
+        CompilerArgumentError(const std::string & msg, const boost::program_options::options_description & description);
+    private:
+        boost::program_options::options_description description;
 };
 
 #endif // COMPILER_H

@@ -18,34 +18,29 @@
 
 */
 
-#include <tokenizer.h>
 #include <fstream>
-#include <istream>
-#include <token.h>
 #include <sstream>
-#include <ctype.h>
-#include <symboltable.h>
-#include <symboltableentry.h>
-#include <iostream>
-#include <vector>
-#include <boost/tuple/tuple.hpp>
 #include <FlexLexer.h>
+
+#include "../include/tokenizer.h"
+#include "../include/token.h"
+#include "../include/output.h"
 
 Environment::Token *yytoken = NULL;
 Environment::SymbolTable *yysymtab = NULL;
 
-namespace LexicalAnalyzer
+namespace Analyzer
 {
-    Tokenizer::Tokenizer(const std::string fileName, Environment::SymbolTable *table)
-    :table(table), in(new std::ifstream(fileName.c_str())), line(1)
+    Tokenizer::Tokenizer(const std::string fileName, Environment::SymbolTable * table, const bool & verbose, const bool & debug)
+    :table(table), in(new std::ifstream(fileName.c_str())), line(1), verbose(verbose), debug(debug)
     {
         yysymtab = table;
         this->buffer.push_back(this->get());
         this->current = this->buffer.begin();
     }
 
-    Tokenizer::Tokenizer(std::istream &in, Environment::SymbolTable *table)
-    :table(table), in(&in), line(1)
+    Tokenizer::Tokenizer(std::istream & in, Environment::SymbolTable * table, const bool & verbose, const bool & debug)
+    :table(table), in(&in), line(1), verbose(verbose), debug(debug)
     {
         yysymtab = table;
         this->buffer.push_back(this->get());
@@ -88,10 +83,15 @@ namespace LexicalAnalyzer
 
     Environment::Token Tokenizer::get()
     {
+        using namespace Environment;
+
         static std::stringstream bit_bucket;
         if (yytoken) delete yytoken;
         static yyFlexLexer *scanner = new yyFlexLexer(this->in, &bit_bucket);
-        while (scanner->yylex() == Environment::COMMENT) delete yytoken;
+        while (scanner->yylex() == COMMENT) delete yytoken;
+        #ifndef NDEBUG
+        DEBUG(scanner->lineno());
+        #endif
         this->line = scanner->lineno();
         return *yytoken;
     }

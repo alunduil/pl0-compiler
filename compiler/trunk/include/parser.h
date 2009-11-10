@@ -1,6 +1,6 @@
 /*
     <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    Copyright (C) 2009  Alex Brandt
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,32 +23,35 @@
 
 #include <string>
 #include <istream>
-#include <token.h>
-#include <symboltableentry.h>
-#include <programstore.h>
-#include <errorqueue.h>
 
-namespace Environment
+#include "../include/token.h"
+#include "../include/tokenizer.h"
+#include "../include/symboltable.h"
+#include "../include/programstore.h"
+#include "../include/errorqueue.h"
+
+namespace Analyzer
 {
-    class SymbolTable;
-}
-
-namespace LexicalAnalyzer
-{
-    class Tokenizer;
-
     class Parser
     {
         public:
             /**
-            * @brief Constructor.
-            */
-            Parser(std::string fileName, Environment::SymbolTable *table, bool debug = false, int maxErrors = 100);
+             * @brief Constructor.
+             * @param fileName The name of the file to open.
+             * @param maxErrors The maximum number of errors to report before dying.
+             * @param verbose Whether or not to print verbose output.
+             * @param debug Whether or not to print debugging output.
+             */
+            Parser(const std::string & fileName, const int & maxErrors = 25, const bool & verbose = false, const bool & debug = false, const bool & warnings = false);
 
             /**
-            * @brief Constructor.
-            */
-            Parser(std::istream & in, Environment::SymbolTable *table, bool debug = false, int maxErrors = 100);
+             * @brief Constructor.
+             * @param in The input stream to read from.
+             * @param maxErrors The maximum number of errors to report before dying.
+             * @param verbose Whether or not to print verbose output.
+             * @param debug Whether or not to print debugging output.
+             */
+            Parser(std::istream & in, const int & maxErrors = 25, const bool & verbose = false, const bool & debug = false, const bool & warnings = false);
 
             /**
              * @brief Return the string of code generated.
@@ -69,11 +72,14 @@ namespace LexicalAnalyzer
             bool HaveErrors() const;
 
         private:
-            Tokenizer *tokenizer;
             bool debug;
-            Environment::SymbolTable *table;
-            ProgramStore code;
-            ErrorQueue errors;
+            bool verbose;
+            bool warn;
+            Tokenizer tokenizer;
+            Environment::SymbolTable table;
+            Generator::ProgramStore code;
+            Environment::ErrorQueue errors;
+            Environment::ErrorQueue warnings;
 
             /**
              * @brief Parse a program.
@@ -87,51 +93,110 @@ namespace LexicalAnalyzer
              * @brief Parse a block.
              *
              * Read the production:
-             *   block -> ( CONST identifier = { + | - } number (, identifier = { + | - } number )* ; )*
-             *     ( VAR identifier (, identifier )* ; )*
-             *     ( PROCEDURE identifier ; block ; )*
-             *     statement
+             *   block -> constant_declarations variable_declarations procedure_declarations statement
              */
             void block();
+
+            /**
+             * @brief Parse a constant_declarations.
+             *
+             * Read the production:
+             *   constant_declarations -> CONST identifier = sign number more_constants ; constant_declarations | epsilon
+             */
+            void constant_declarations();
+
+            /**
+             * @brief Parse a variable_declarations.
+             *
+             * Read the production:
+             *   variable_declarations -> VAR identifier more_variables ; variable_declarations | epsilon
+             */
+            void variable_declarations();
+
+            /**
+             * @brief Parse a procedure_declarations.
+             *
+             * Read the production:
+             *   procedure_declarations -> PROCEDURE identifier ; block ; procedure_declarations | epsilon
+             */
+            void procedure_declarations();
+
+            /**
+             * @brief Parse a more_constants.
+             *
+             * Read the production:
+             *   more_constants -> , identifier = sign number more_constants | epsilon
+             */
+            void more_constants();
+
+            /**
+             * @brief Parse a more_variables.
+             *
+             * Read the production:
+             *   more_variables -> , identifier more_variables | epsilon
+             */
+            void more_variables();
 
             /**
              * @brief Parse a statement.
              *
              * Read the production:
              *   statement -> identifier := expression
-             *     | BEGIN statement ( ; statement )* END
+             *     | BEGIN statement more_statements END
              *     | IF condition THEN statement
              *     | WHILE condition DO statement
              *     | READ identifier
              *     | CALL identifier
              *     | PRINT expression
-             *     | \epsilon
+             *     | epsilon
              */
             void statement();
+
+            /**
+             * @brief Parse a more_statements.
+             *
+             * Read the production:
+             *   more_statements -> ; statement more_statements | epsilon
+             */
+            void more_statements();
 
             /**
              * @brief Parse an expression.
              *
              * Read the production:
-             *   expression -> term ( ( + | - ) term )*
+             *   expression -> term expression_rhs
              */
             void expression();
+
+            /**
+             * @brief Parse an expression_rhs.
+             *
+             * Read the production:
+             *   expression_rhs -> + term expression_rhs | - term epxression_rhs | epsilon
+             */
+            void expression_rhs();
 
             /**
              * @brief Parse a term.
              *
              * Read the production:
-             *   term -> { + | - } factor ( ( * | / | DIV | MOD ) factor )*
+             *   term -> sign factor term_rhs
              */
             void term();
+
+            /**
+             * @brief Parse a term_rhs.
+             *
+             * Read the production:
+             *   term_rhs -> * factor term_rhs | / factor term_rhs | DIV factor term_rhs | MOD factor term_rhs | epsilon
+             */
+            void term_rhs();
 
             /**
              * @brief Parse a factor.
              *
              * Read the production:
-             *   factor -> ( expression )
-             *     | identifier
-             *     | number
+             *   factor -> ( expression ) | identifier | number
              */
             void factor();
 
@@ -139,32 +204,44 @@ namespace LexicalAnalyzer
              * @brief Parse a condition.
              *
              * Read the production:
-             *   condition -> ODD expression
-             *     | expression ( = | <> | < | > | <= | >= ) expression
+             *   condition -> ODD expression | expression binary_condition
              */
             void condition();
 
             /**
-             * @brief CONST IDENTIFIER NUMBER.
+             * @brief Parse a binary condition.
+             *
+             * Read the production:
+             *   binary_condition -> ( = | <> | < | > | <= | >= ) expression
              */
-            void constIdentifierNumber();
+            void binary_condition();
 
             /**
-             * @brief IDENTIFIER
+             * @brief Parse an identifier.
              */
-            void identifier(Environment::ID_TYPE type, ID_PURPOSE declaration = USE);
-
-            /**
-             * @brief Read number
-             */
-            void number();
+            void identifier(Environment::Token & token, const Environment::ID_TYPE & type, const Environment::ID_PURPOSE & declaration);
 
             /**
              * @brief Match a token.
-             * @param token The token we matched.
+             * @param got The token we matched.
              * @param value The value we are looking for.
              */
-            bool match(Environment::Token &token, Environment::TOKEN_VALUE value);
+            bool match(Environment::Token & got, const Environment::TOKEN_VALUE & value, const Environment::ERROR_TYPE & level = Environment::ERROR_T);
+
+            /**
+             * @brief Peek at the next token.
+             * @return The TOKEN_VALUE of the next token.
+             */
+            Environment::TOKEN_VALUE peek() const;
+
+            /**
+             * @brief Parse a sign.
+             * @return True if negation needs to be performed.
+             *
+             * Read the production:
+             *   sign -> + | - | epsilon
+             */
+            bool sign();
     };
 }
 

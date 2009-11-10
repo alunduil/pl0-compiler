@@ -18,27 +18,25 @@
 
 */
 
-#include <parser.h>
-#include <token.h>
 #include <iostream>
-#include <symboltable.h>
-#include <tokenizer.h>
-#include <symboltableentry.h>
 #include <boost/lexical_cast.hpp>
-#include <instruction.h>
-#include <programstore.h>
 
-#define DEBUG(A) std::cerr << __FILE__ << ":" << __LINE__ << ": debug: " << (A) << std::endl
+#include "../include/parser.h"
+#include "../include/output.h"
+#include "../include/instruction.h"
 
-namespace LexicalAnalyzer
+namespace Analyzer
 {
-    Parser::Parser(std::istream &in, Environment::SymbolTable *table, bool debug, int maxErrors)
-            : errors(maxErrors), debug(debug), table(table), tokenizer(new Tokenizer(in, table))
+    Parser::Parser(std::istream & in, const int & maxErrors, const bool & verbose, const bool & debug, const bool & warnings)
+            : errors(Environment::ERROR_T, maxErrors), debug(debug), table(), tokenizer(in, &table, verbose, debug),
+            warnings(Environment::WARNING_T, -1), verbose(verbose), warn(warnings)
     {
     }
 
-    Parser::Parser(std::string fileName, Environment::SymbolTable *table, bool debug, int maxErrors)
-            : errors(maxErrors), debug(debug), table(table), tokenizer(new Tokenizer(fileName, table))
+    Parser::Parser(const std::string & fileName, const int & maxErrors, const bool & verbose, const bool & debug, const bool & warnings)
+            : errors(Environment::ERROR_T, maxErrors), debug(debug), table(),
+            tokenizer(fileName, &table, verbose, debug), warnings(Environment::WARNING_T, -1), verbose(verbose),
+            warn(warnings)
     {
     }
 
@@ -47,319 +45,648 @@ namespace LexicalAnalyzer
         return this->code.ToString();
     }
 
-    bool Parser::match(Environment::Token &token, Environment::TOKEN_VALUE value)
+    Environment::TOKEN_VALUE Parser::peek() const
     {
-        token = this->tokenizer->Peek();
+        return this->tokenizer.Peek().GetTokenValue();
+    }
+
+    bool Parser::match(Environment::Token & token, const Environment::TOKEN_VALUE & value, const Environment::ERROR_TYPE & level)
+    {
+        using namespace Environment;
+
+        token = this->tokenizer.Peek();
         if (token.GetTokenValue() != value)
         {
-            this->errors.Push(token, value, this->tokenizer->GetCurrentLine());
-            return false;
+            switch (level)
+            {
+                case ERROR_T:
+                    this->errors.Push(token, value, this->tokenizer.GetCurrentLine());
+                    return false;
+                case WARNING_T:
+                    this->warnings.Push(token, value, this->tokenizer.GetCurrentLine());
+                    return true;
+            }
         }
-        this->tokenizer->Ignore();
-        if (this->debug) std::cerr << token << std::endl;
+        this->tokenizer.Ignore();
+#ifndef NDEBUG
+        DEBUG(token);
+#endif
         return true;
     }
 
     void Parser::Parse()
     {
+        using namespace Environment;
+        /**
+         * @note Should see the start symbol production followed by $.
+         */
+        Token tmp;
         this->program();
+        this->match(tmp, EOFL);
+        VERBOSE("\n" + this->code.ToString());
     }
 
     void Parser::program()
     {
-        Environment::Token tmp("");
-        this->match(tmp, Environment::PROGRAM);
+        using namespace Environment;
+        /**
+         * program -> PROGRAM block .
+         */
+        Token tmp;
+        this->match(tmp, PROGRAM);
         this->block();
-        this->match(tmp, Environment::DOT);
-        this->match(tmp, Environment::EOFL);
+        this->match(tmp, DOT, static_cast<ERROR_TYPE>(this->warn));
     }
 
     void Parser::block()
     {
-        Environment::Token tmp("");
+        using namespace Environment;
+        /**
+         * block -> constant_declarations variable_declarations procedure_declarations statement
+         */
+        Token tmp;
+        /**
+         * Increment over the variables that may be declared, but don't need space for procedures.
+         */
         int stack_increment_instruction = this->code.TopAddress();
-        this->code.Push(new Instruction("int", 0, 3));
-        while (this->tokenizer->Peek().GetTokenValue() == Environment::CONST)
-        {
-            this->match(tmp, Environment::CONST);
-            do
-            {
-                if (this->tokenizer->Peek().GetTokenValue() == Environment::COMMA)
-                    this->match(tmp, Environment::COMMA);
-                std::string id = this->tokenizer->Peek().GetLexeme();
-                this->identifier(Environment::CONST_ID, DECLARE);
-                this->match(tmp, Environment::EQUALS);
-                bool negate = false;
-                if (this->tokenizer->Peek().GetTokenValue() == Environment::PLUS)
-                    this->match(tmp, Environment::PLUS);
-                else if (this->tokenizer->Peek().GetTokenValue() == Environment::MINUS)
-                {
-                    this->match(tmp, Environment::MINUS);
-                    negate = true;
-                }
-                this->match(tmp, Environment::NUMBER);
-                this->code.Push(new Instruction("lit", 0, boost::lexical_cast<int, std::string>(tmp.GetLexeme())));
-                if (negate) this->code.Push(new Instruction("opr", 0, 1));
-                int level;
-                Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-                this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
-            }
-            while (this->tokenizer->Peek().GetTokenValue() == Environment::COMMA);
-            while (!this->match(tmp, Environment::SEMICOLON)) this->tokenizer->Ignore();
-        }
-        while (this->tokenizer->Peek().GetTokenValue() == Environment::VAR)
-        {
-            this->match(tmp, Environment::VAR);
-            do
-            {
-                if (this->tokenizer->Peek().GetTokenValue() == Environment::COMMA)
-                    this->match(tmp, Environment::COMMA);
-                this->identifier(Environment::VAR_ID, DECLARE);
-            }
-            while (this->tokenizer->Peek().GetTokenValue() == Environment::COMMA);
-            while (!this->match(tmp, Environment::SEMICOLON)) this->tokenizer->Ignore();
-        }
-        while (this->tokenizer->Peek().GetTokenValue() == Environment::PROCEDURE)
-        {
-            this->match(tmp, Environment::PROCEDURE);
-            int procedure_jump = this->code.TopAddress();
-            this->code.Push(new Instruction("jmp", 0, this->code.TopAddress() + 1));
-            std::string id = this->tokenizer->Peek().GetLexeme();
-            this->identifier(Environment::PROC_ID, DECLARE);
-            int level;
-            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-            entry->SetAddress(this->code.TopAddress());
-            this->match(tmp, Environment::SEMICOLON);
-            if (this->debug) std::cerr << *this->table << std::endl;
-            this->table->Push();
-            this->block();
-            if (this->debug) std::cerr << *this->table << std::endl;
-            this->table->Pop();
-            this->match(tmp, Environment::SEMICOLON);
-            this->code.Push(new Instruction("opr", 0, 0));
-            this->code[procedure_jump].SetAddress(this->code.TopAddress());
-        }
-        this->code[stack_increment_instruction].SetAddress(this->table->Count());
+        this->code.Push(new Generator::Instruction("int", 0, 3));
+        this->constant_declarations();
+        this->variable_declarations();
+        this->code[stack_increment_instruction].SetAddress(this->table.Count());
+        this->procedure_declarations();
         this->statement();
     }
 
-    void Parser::identifier(Environment::ID_TYPE type, ID_PURPOSE declaration)
+    void Parser::constant_declarations()
     {
-        Environment::Token tmp("");
-        this->match(tmp, Environment::IDENTIFIER);
-        Environment::SymbolTableEntry entry(tmp.GetLexeme());
+        using namespace Environment;
+        using namespace Generator;
+        using namespace boost;
+        /**
+         * constant_declarations -> CONST identifier =  sign number more_constants ; constant_declarations | epsilon
+         */
+        Token tmp;
+        std::string id;
+        bool negate;
+        SymbolTableEntry * entry;
 
-        if (declaration == DECLARE)
+        switch (this->peek())
         {
-            if (tmp.GetSymbolTableEntry() && tmp.GetLevel() < 1)
-                this->errors.Push(tmp, DECLARE, this->tokenizer->GetCurrentLine());
-            entry.SetIdentifierType(type);
-            entry.SetTokenValue(tmp.GetTokenValue());
-            this->table->Insert(entry);
-        }
-        else
-            if (!tmp.GetSymbolTableEntry())
-            {
-                this->errors.Push(tmp, USE, this->tokenizer->GetCurrentLine());
-                throw new LexicalAnalyzer::ErrorQueueError();
-            }
-            else
-            {
-                Environment::ID_TYPE got = tmp.GetSymbolTableEntry()->GetIdentifierType();
-                if ((type & got) != got)
+            case CONST:
+                this->match(tmp, CONST);
+                this->identifier(tmp, CONST_ID, DECLARE);
+                id = tmp.GetLexeme(); // The ID to find in the symbol table.
+                this->match(tmp, EQUALS, static_cast<ERROR_TYPE>(this->warn));
+                negate = this->sign(); // Whether to negate our number or not.
+                if (!this->match(tmp, NUMBER))
                 {
-                    this->errors.Push(got, type, this->tokenizer->GetCurrentLine(), tmp.GetLexeme());
-                    throw new LexicalAnalyzer::ErrorQueueError();
+                    /**
+                     * Panic mode error recovery.
+                     * If we don't see a number then we need to resync to an
+                     * item in the follow set and die.
+                     * Follow(constant_declarations) = {
+                     *   VAR, PROCEDURE, IDENTIFIER, IBEGIN, IF, WHILE, READ, CALL, PRINT, DOT, SEMICOLON
+                     *   }
+                     */
+                    while (this->peek() != VAR
+                            || this->peek() != PROCEDURE
+                            || this->peek() != IDENTIFIER
+                            || this->peek() != IBEGIN
+                            || this->peek() != IF
+                            || this->peek() != WHILE
+                            || this->peek() != READ
+                            || this->peek() != CALL
+                            || this->peek() != PRINT
+                            || this->peek() != DOT
+                            || this->peek() != SEMICOLON
+                          )
+                        this->match(tmp, this->peek());
+                    break;
                 }
-            }
+
+                /**
+                 * Load our number on the stack.
+                 * Negate if necessary.
+                 * Store the number in the variable.
+                 */
+                this->code.Push(new Instruction("lit", 0, lexical_cast<int>(tmp.GetLexeme())));
+                if (negate) this->code.Push(new Instruction("opr", 0, 1));
+                int level;
+                entry = this->table.Find(id, level);
+                this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
+
+                this->more_constants();
+                this->match(tmp, SEMICOLON, static_cast<ERROR_TYPE>(this->warn));
+                this->constant_declarations();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Parser::variable_declarations()
+    {
+        using namespace Environment;
+        /**
+         * variable_declarations -> VAR identifier more_variables ; variable_declarations | epsilon
+         */
+        Token tmp;
+
+        switch (this->peek())
+        {
+            case VAR:
+                this->match(tmp, VAR);
+                this->identifier(tmp, VAR_ID, DECLARE);
+                this->more_variables();
+                this->match(tmp, SEMICOLON, static_cast<ERROR_TYPE>(this->warn));
+                this->variable_declarations();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Parser::procedure_declarations()
+    {
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * procedure_declarations -> PROCEDURE identifier ; block ; procedure_declarations | epsilon
+         */
+        Token tmp;
+        int procedure_jump;
+        int level;
+
+        switch (this->peek())
+        {
+            case PROCEDURE:
+                this->match(tmp, PROCEDURE);
+
+                procedure_jump = this->code.TopAddress(); // Jump over the procedure's code.
+                this->code.Push(new Instruction("jmp", 0, this->code.TopAddress() + 1));
+
+                /**
+                 * Get the procedure's name and then set the address in the symbol table.
+                 */
+                this->identifier(tmp, PROC_ID, DECLARE);
+                this->table.Find(tmp.GetLexeme(), level)->SetAddress(this->code.TopAddress());
+
+                this->match(tmp, SEMICOLON, static_cast<ERROR_TYPE>(this->warn));
+
+#ifndef NDEBUG
+                DEBUG(this->table);
+#endif
+
+                this->table.Push();
+                this->block();
+
+#ifndef NDEBUG
+                DEBUG(this->table);
+#endif
+
+                this->table.Pop();
+
+                this->match(tmp, SEMICOLON, static_cast<ERROR_TYPE>(this->warn));
+
+                this->code.Push(new Instruction("opr", 0, 0));
+                this->code[procedure_jump].SetAddress(this->code.TopAddress());
+
+                this->procedure_declarations();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Parser::more_constants()
+    {
+        using namespace Environment;
+        using namespace Generator;
+        using namespace boost;
+        /**
+         * more_constants -> , identifier = sign number more_constants | epsilon
+         */
+        Token tmp;
+        std::string id;
+        bool negate;
+        int level;
+        SymbolTableEntry * entry;
+
+        switch (this->peek())
+        {
+            case COMMA:
+                this->match(tmp, COMMA);
+                this->identifier(tmp, CONST_ID, DECLARE);
+                id = tmp.GetLexeme(); // The ID to find in the symbol table.
+                this->match(tmp, EQUALS, static_cast<ERROR_TYPE>(this->warn));
+                negate = this->sign(); // Whether to negate our number or not.
+                if (!this->match(tmp, NUMBER))
+                {
+                    /**
+                    * Panic mode error recovery.
+                    * If we don't see a number then we need to resync to an
+                    * item in the follow set and die.
+                    * Follow(more_constants) = { SEMICOLON }
+                    */
+                    while (this->peek() != SEMICOLON)
+                        this->match(tmp, this->peek());
+                    break;
+                }
+
+                /**
+                 * Load our number on the stack.
+                 * Negate if necessary.
+                 * Store the number in the variable.
+                 */
+                this->code.Push(new Instruction("lit", 0, lexical_cast<int>(tmp.GetLexeme())));
+                if (negate) this->code.Push(new Instruction("opr", 0, 1));
+                entry = this->table.Find(id, level);
+                this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
+
+                this->more_constants();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Parser::more_variables()
+    {
+        using namespace Environment;
+        /**
+         * more_variables -> , identifier more_variables | epsilon
+         */
+        Token tmp;
+
+        switch (this->peek())
+        {
+            case COMMA:
+                this->match(tmp, COMMA);
+                this->identifier(tmp, VAR_ID, DECLARE);
+                this->more_variables();
+                break;
+            default:
+                break;
+        }
     }
 
     void Parser::statement()
     {
-        Environment::Token tmp("");
-        if (this->tokenizer->Peek().GetTokenValue() == Environment::IDENTIFIER)
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * statement -> identifier := expression
+         *            | BEGIN statement more_statements END
+         *            | IF condition THEN statement
+         *            | WHILE condition DO statement
+         *            | READ identifier
+         *            | CALL identifier
+         *            | PRINT expression
+         *            | epsilon
+         */
+        Token tmp;
+        std::string id;
+        int level;
+        SymbolTableEntry * entry;
+        int jump_over_statement;
+        int top_of_loop;
+
+        switch (this->peek())
         {
-            std::string id = this->tokenizer->Peek().GetLexeme();
-            this->identifier(Environment::VAR_ID, USE);
-            this->match(tmp, Environment::ASSIGNMENT);
-            this->expression();
-            int level;
-            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-            this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
-        }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::IBEGIN)
-        {
-            this->match(tmp, Environment::IBEGIN);
-            this->statement();
-            while (this->tokenizer->Peek().GetTokenValue() == Environment::SEMICOLON)
-            {
-                this->match(tmp, Environment::SEMICOLON);
+            case IDENTIFIER:
+                this->identifier(tmp, VAR_ID, USE);
+                id = tmp.GetLexeme(); // Get ID to store into.
+                this->match(tmp, ASSIGNMENT, static_cast<ERROR_TYPE>(this->warn));
+                this->expression();
+
+                entry = this->table.Find(id, level);
+                this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
+                break;
+            case IBEGIN:
+                this->match(tmp, IBEGIN);
                 this->statement();
-            }
-            this->match(tmp, Environment::END);
+                this->more_statements();
+                this->match(tmp, END, static_cast<ERROR_TYPE>(this->warn));
+                break;
+            case IF:
+                this->match(tmp, IF);
+                this->condition();
+
+                /**
+                 * Conditional jump over the statement.
+                 */
+                jump_over_statement = this->code.TopAddress();
+                this->code.Push(new Instruction("jpc", 0, this->code.TopAddress() + 1));
+
+                this->match(tmp, THEN, static_cast<ERROR_TYPE>(this->warn));
+                this->statement();
+
+                /**
+                 * Jump to this point.
+                 */
+                this->code[jump_over_statement].SetAddress(this->code.TopAddress());
+                break;
+            case WHILE:
+                this->match(tmp, WHILE);
+                top_of_loop = this->code.TopAddress(); // Top of loop to continue.
+                this->condition();
+
+                /**
+                 * Jump over the statement if the condition is false.
+                 */
+                jump_over_statement = this->code.TopAddress();
+                this->code.Push(new Instruction("jpc", 0, this->code.TopAddress() + 1));
+
+                this->match(tmp, DO, static_cast<ERROR_TYPE>(this->warn));
+                this->statement();
+
+                this->code.Push(new Instruction("jmp", 0, top_of_loop)); // Continue.
+                /**
+                 * Jump to here if condition is false.
+                 */
+                this->code[jump_over_statement].SetAddress(this->code.TopAddress());
+                break;
+            case READ:
+                this->match(tmp, READ);
+                this->code.Push(new Instruction("opr", 0, 14));
+                this->identifier(tmp, VAR_ID, USE);
+                entry = this->table.Find(tmp.GetLexeme(), level);
+                this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
+                break;
+            case CALL:
+                this->match(tmp, CALL);
+                this->identifier(tmp, PROC_ID, USE);
+                entry = this->table.Find(tmp.GetLexeme(), level);
+                this->code.Push(new Instruction("cal", level, entry->GetAddress()));
+                break;
+            case PRINT:
+                this->match(tmp, PRINT);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 15));
+                break;
+            default:
+                break;
         }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::IF)
+    }
+
+    void Parser::more_statements()
+    {
+        using namespace Environment;
+        /**
+         * more_statements -> ; statement more_statements | epsilon
+         */
+        Token tmp;
+
+        switch (this->peek())
         {
-            this->match(tmp, Environment::IF);
-            this->condition();
-            int jump_over_statement = this->code.TopAddress();
-            this->code.Push(new Instruction("jpc", 0, this->code.TopAddress() + 1));
-            this->match(tmp, Environment::THEN);
-            this->statement();
-            this->code[jump_over_statement].SetAddress(this->code.TopAddress());
-        }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::WHILE)
-        {
-            this->match(tmp, Environment::WHILE);
-            int top_of_loop = this->code.TopAddress();
-            this->condition();
-            int jump_over_statement = this->code.TopAddress();
-            this->code.Push(new Instruction("jpc", 0, this->code.TopAddress() + 1));
-            this->match(tmp, Environment::DO);
-            this->statement();
-            this->code.Push(new Instruction("jmp", 0, top_of_loop));
-            this->code[jump_over_statement].SetAddress(this->code.TopAddress());
-        }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::READ)
-        {
-            this->match(tmp, Environment::READ);
-            this->code.Push(new Instruction("opr", 0, 14));
-            std::string id = this->tokenizer->Peek().GetLexeme();
-            this->identifier(Environment::VAR_ID, USE);
-            int level;
-            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-            this->code.Push(new Instruction("sto", level, entry->GetOffSet()));
-        }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::CALL)
-        {
-            this->match(tmp, Environment::CALL);
-            std::string id = this->tokenizer->Peek().GetLexeme();
-            this->identifier(Environment::PROC_ID, USE);
-            int level;
-            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-            this->code.Push(new Instruction("cal", level, entry->GetAddress()));
-        }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::PRINT)
-        {
-            this->match(tmp, Environment::PRINT);
-            this->expression();
-            this->code.Push(new Instruction("opr", 0, 15));
+            case SEMICOLON:
+                this->match(tmp, SEMICOLON);
+                this->statement();
+                this->more_statements();
+            default:
+                break;
         }
     }
 
     void Parser::expression()
     {
-        Environment::Token tmp("");
+        using namespace Environment;
+        /**
+         * expression -> term expression_rhs
+         */
         this->term();
-        while (this->tokenizer->Peek().GetTokenValue() == Environment::PLUS
-                || this->tokenizer->Peek().GetTokenValue() == Environment::MINUS)
-        {
-            if (this->tokenizer->Peek().GetTokenValue() == Environment::PLUS)
-                this->match(tmp, Environment::PLUS);
-            else
-                this->match(tmp, Environment::MINUS);
-            this->term();
-            this->code.Push(new Instruction("opr", 0, (tmp.GetTokenValue() == Environment::PLUS) ? 2 : 3));
-        }
+        this->expression_rhs();
     }
 
-    void Parser::condition()
+    void Parser::expression_rhs()
     {
-        Environment::Token tmp("");
-        std::string op;
-        if (this->tokenizer->Peek().GetTokenValue() == Environment::ODD)
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * expression_rhs -> + term expression_rhs | - term epxression_rhs | epsilon
+         */
+        Token tmp;
+        switch (this->peek())
         {
-            this->match(tmp, Environment::ODD);
-            op = tmp.GetLexeme();
+            case PLUS:
+                this->match(tmp, PLUS);
+                this->term();
+                this->expression_rhs();
+                this->code.Push(new Instruction("opr", 0, 2));
+                break;
+            case MINUS:
+                this->match(tmp, MINUS);
+                this->term();
+                this->expression_rhs();
+                this->code.Push(new Instruction("opr", 0, 3));
+                break;
+            default:
+                break;
         }
-        else
-        {
-            this->expression();
-            if (this->tokenizer->Peek().GetTokenValue() == Environment::EQUALS)
-                this->match(tmp, Environment::EQUALS);
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::NOTEQUAL)
-                this->match(tmp, Environment::NOTEQUAL);
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::LESSTHAN)
-                this->match(tmp, Environment::LESSTHAN);
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::GREATERTHAN)
-                this->match(tmp, Environment::GREATERTHAN);
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::LESSTHANEQUAL)
-                this->match(tmp, Environment::LESSTHANEQUAL);
-            else
-                this->match(tmp, Environment::GREATERTHANEQUAL);
-            op = tmp.GetLexeme();
-        }
-        this->expression();
-        this->code.Push(new Instruction("opr", 0,
-                                        (op == "ODD") ? 6 :
-                                        (op == "=") ? 8 :
-                                        (op == "<>") ? 9 :
-                                        (op == "<") ? 10 :
-                                        (op == ">") ? 12 :
-                                        (op == "<=") ? 13 : 11));
     }
 
     void Parser::term()
     {
-        Environment::Token tmp("");
-        if (this->tokenizer->Peek().GetTokenValue() == Environment::PLUS)
-            this->match(tmp, Environment::PLUS);
-        if (this->tokenizer->Peek().GetTokenValue() == Environment::MINUS)
-            this->match(tmp, Environment::MINUS);
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * term -> sign factor term_rhs
+         */
+        bool negate = this->sign();
         this->factor();
-        if (tmp.GetTokenValue() == Environment::MINUS) this->code.Push(new Instruction("opr", 0, 1));
-        while (this->tokenizer->Peek().GetTokenValue() == Environment::MULTIPLY
-                || this->tokenizer->Peek().GetTokenValue() == Environment::DIVIDE
-                || this->tokenizer->Peek().GetTokenValue() == Environment::DIV
-                || this->tokenizer->Peek().GetTokenValue() == Environment::MOD
-              )
+        if (negate) this->code.Push(new Instruction("opr", 0, 1));
+        this->term_rhs();
+    }
+
+    void Parser::term_rhs()
+    {
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * term_rhs -> * factor term_rhs | / factor term_rhs | DIV factor term_rhs | MOD factor term_rhs | epsilon
+         */
+        Token tmp;
+        switch (this->peek())
         {
-            if (this->tokenizer->Peek().GetTokenValue() == Environment::MOD)
-            {
-                this->match(tmp, Environment::MOD);
+            case MULTIPLY:
+                this->match(tmp, MULTIPLY);
+                this->factor();
+                this->code.Push(new Instruction("opr", 0, 4));
+                this->term_rhs();
+                break;
+            case DIVIDE:
+                this->match(tmp, DIVIDE);
+                this->factor();
+                this->code.Push(new Instruction("opr", 0, 5));
+                this->term_rhs();
+                break;
+            case DIV:
+                this->match(tmp, DIV);
+                this->factor();
+                this->code.Push(new Instruction("opr", 0, 5));
+                this->term_rhs();
+                break;
+            case MOD:
+                this->match(tmp, MOD);
                 this->code.Push(new Instruction("opr", 0, 7));
-            }
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::MULTIPLY)
-                this->match(tmp, Environment::MULTIPLY);
-            else if (this->tokenizer->Peek().GetTokenValue() == Environment::DIVIDE)
-                this->match(tmp, Environment::DIVIDE);
-            else
-                this->match(tmp, Environment::DIV);
-            this->factor();
-            if (tmp.GetTokenValue() == Environment::MOD)
-            {
+                this->factor();
                 this->code.Push(new Instruction("opr", 0, 5));
                 this->code.Push(new Instruction("int", 0, 1));
                 this->code.Push(new Instruction("opr", 0, 4));
                 this->code.Push(new Instruction("opr", 0, 3));
-            }
-            else
-                this->code.Push(new Instruction("opr", 0, (tmp.GetTokenValue() == Environment::MULTIPLY) ? 4 :
-                                                (tmp.GetTokenValue() == Environment::DIVIDE) ? 5 : 5));
+                this->term_rhs();
+                break;
+            default:
+                break;
         }
     }
 
     void Parser::factor()
     {
-        Environment::Token tmp("");
-        if (this->tokenizer->Peek().GetTokenValue() == Environment::LEFTPAREN)
+        using namespace Environment;
+        using namespace Generator;
+        using namespace boost;
+        /**
+         * factor -> ( expression ) | identifier | number
+         */
+        Token tmp;
+        int level;
+        SymbolTableEntry * entry;
+
+        switch (this->peek())
         {
-            this->match(tmp, Environment::LEFTPAREN);
-            this->expression();
-            this->match(tmp, Environment::RIGHTPAREN);
+            case LEFTPAREN:
+                this->match(tmp, LEFTPAREN);
+                this->expression();
+                this->match(tmp, RIGHTPAREN, static_cast<ERROR_TYPE>(this->warn));
+                break;
+            case IDENTIFIER:
+                this->identifier(tmp, static_cast<ID_TYPE>(VAR_ID | CONST_ID), USE);
+                entry = this->table.Find(tmp.GetLexeme(), level);
+                this->code.Push(new Instruction("lod", level, entry->GetOffSet()));
+                break;
+            case NUMBER:
+                this->match(tmp, NUMBER);
+                this->code.Push(new Instruction("lit", 0, lexical_cast<int>(tmp.GetLexeme())));
+                break;
         }
-        else if (this->tokenizer->Peek().GetTokenValue() == Environment::IDENTIFIER)
+    }
+
+    void Parser::condition()
+    {
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * condition -> ODD expression | expression binary_condition
+         */
+        Token tmp;
+
+        switch (this->peek())
         {
-            std::string id = this->tokenizer->Peek().GetLexeme();
-            this->identifier(static_cast<Environment::ID_TYPE>(Environment::VAR_ID | Environment::CONST_ID), USE);
-            int level;
-            Environment::SymbolTableEntry *entry = this->table->Find(id, level);
-            this->code.Push(new Instruction("lod", level, entry->GetOffSet()));
+            case ODD:
+                this->match(tmp, ODD);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 6));
+                break;
+            default:
+                this->expression();
+                this->binary_condition();
+                break;
         }
-        else
+    }
+
+    void Parser::binary_condition()
+    {
+        using namespace Environment;
+        using namespace Generator;
+        /**
+         * binary_condition -> ( = | <> | < | > | <= | >= ) expression
+         */
+        Token tmp;
+        std::string error;
+
+        switch (this->peek())
         {
-            this->code.Push(new Instruction("lit", 0, boost::lexical_cast<int, std::string>(this->tokenizer->Peek().GetLexeme())));
-            this->match(tmp, Environment::NUMBER);
+            case EQUALS:
+                this->match(tmp, EQUALS);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 8));
+                break;
+            case NOTEQUAL:
+                this->match(tmp, NOTEQUAL);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 9));
+                break;
+            case LESSTHAN:
+                this->match(tmp, LESSTHAN);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 10));
+                break;
+            case GREATERTHAN:
+                this->match(tmp, GREATERTHAN);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 12));
+                break;
+            case LESSTHANEQUAL:
+                this->match(tmp, LESSTHANEQUAL);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 13));
+                break;
+            case GREATERTHANEQUAL:
+                this->match(tmp, GREATERTHANEQUAL);
+                this->expression();
+                this->code.Push(new Instruction("opr", 0, 11));
+                break;
+            default:
+                this->errors.Push(tmp, BINARYCONDITIONALOPERATOR, this->tokenizer.GetCurrentLine());
+                break;
+        }
+    }
+
+    void Parser::identifier(Environment::Token & token, const Environment::ID_TYPE & type, const Environment::ID_PURPOSE & declaration)
+    {
+        using namespace Environment;
+        this->match(token, Environment::IDENTIFIER);
+
+        switch (declaration)
+        {
+            case DECLARE:
+                if (token.GetSymbolTableEntry() && token.GetLevel() < 1)
+                    this->errors.Push(token, DECLARE, this->tokenizer.GetCurrentLine());
+                this->table.Insert(token.GetLexeme(), token.GetTokenValue())->SetIdentifierType(type);
+                break;
+            case USE:
+                if (!token.GetSymbolTableEntry())
+                    this->errors.Push(token, USE, this->tokenizer.GetCurrentLine());
+                else
+                {
+                    ID_TYPE got = token.GetSymbolTableEntry()->GetIdentifierType();
+                    if ((type & got) != got)
+                        this->errors.Push(got, type, this->tokenizer.GetCurrentLine(), token.GetLexeme());
+                }
+                break;
+            default:
+                /** Cannot get here as ID_PURPOSE has only two values! */
+                break;
+        }
+    }
+
+    bool Parser::sign()
+    {
+        using namespace Environment;
+        /**
+         * sign -> + | - | epsilon
+         */
+        Token tmp;
+        switch (this->peek())
+        {
+            case MINUS:
+                this->match(tmp, MINUS);
+                return true;
+            case PLUS:
+                this->match(tmp, PLUS);
+            default:
+                return false;
         }
     }
 

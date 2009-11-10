@@ -30,10 +30,6 @@ namespace Environment
     {
     }
 
-    Token::Token()
-    {
-    }
-
     int Token::GetLevel() const
     {
         return this->level;

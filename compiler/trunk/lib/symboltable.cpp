@@ -17,8 +17,10 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <symboltable.h>
-#include <symboltableentry.h>
+#include <iostream>
+
+#include "../include/symboltable.h"
+#include "../include/symboltableentry.h"
 
 namespace Environment
 {
@@ -40,7 +42,7 @@ namespace Environment
         return this->tables.back()->Count();
     }
 
-    SymbolTableEntry * SymbolTable::Find(SymbolTableEntry &entry, int & level)
+    SymbolTableEntry * SymbolTable::Find(const SymbolTableEntry & entry, int & level)
     {
         level = 0;
         for (std::list<InternalSymbolTable *>::reverse_iterator i = this->tables.rbegin(); i != this->tables.rend(); ++i, ++level)
@@ -48,7 +50,7 @@ namespace Environment
         return NULL;
     }
 
-    SymbolTableEntry * SymbolTable::Find(const std::string lexeme, int & level)
+    SymbolTableEntry * SymbolTable::Find(const std::string & lexeme, int & level)
     {
         SymbolTableEntry *tmp = new SymbolTableEntry(lexeme, 0);
         SymbolTableEntry *ret = this->Find(*tmp, level);
@@ -56,17 +58,19 @@ namespace Environment
         return ret;
     };
 
-    void SymbolTable::Insert(SymbolTableEntry & entry)
+    SymbolTableEntry * SymbolTable::Insert(const SymbolTableEntry & entry)
     {
         SymbolTableEntry *tmp = new SymbolTableEntry(entry);
         this->tables.back()->Insert(*tmp);
+        return tmp;
     }
 
-    void SymbolTable::Insert(const std::string lexeme, TOKEN_VALUE value)
+    SymbolTableEntry * SymbolTable::Insert(const std::string & lexeme, const TOKEN_VALUE & value)
     {
-        SymbolTableEntry *tmp = new SymbolTableEntry(lexeme, 0, value);
-        this->Insert(*tmp);
+        SymbolTableEntry * tmp = new SymbolTableEntry(lexeme, 0, value);
+        SymbolTableEntry * ret = this->Insert(*tmp);
         delete tmp;
+        return ret;
     }
 
     void SymbolTable::Push()
@@ -91,7 +95,7 @@ namespace Environment
         return out;
     };
 
-    SymbolTableEntry * SymbolTable::InternalSymbolTable::Find(const std::string lexeme)
+    SymbolTableEntry * SymbolTable::InternalSymbolTable::Find(const std::string & lexeme)
     {
         SymbolTableEntry *tmp = new SymbolTableEntry(lexeme, 0);
         SymbolTableEntry *ret = this->Find(*tmp);
@@ -105,10 +109,11 @@ namespace Environment
         return NULL;
     }
 
-    void SymbolTable::InternalSymbolTable::Insert(SymbolTableEntry &entry)
+    SymbolTableEntry * SymbolTable::InternalSymbolTable::Insert(SymbolTableEntry & entry)
     {
         entry.SetOffSet(this->count++);
         this->table[entry.GetLexeme()] = &entry;
+        return &entry;
     };
 
     int SymbolTable::InternalSymbolTable::Count() const
@@ -116,10 +121,10 @@ namespace Environment
         return this->count;
     }
 
-    void SymbolTable::InternalSymbolTable::Insert(const std::string lexeme, TOKEN_VALUE value)
+    SymbolTableEntry * SymbolTable::InternalSymbolTable::Insert(const std::string & lexeme, const TOKEN_VALUE & value)
     {
         SymbolTableEntry *tmp = new SymbolTableEntry(lexeme, 0, value);
-        this->Insert(*tmp);
+        return this->Insert(*tmp);
     }
 
     std::ostream & SymbolTable::InternalSymbolTable::print(std::ostream & out)
@@ -141,4 +146,4 @@ namespace Environment
     }
 };
 
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

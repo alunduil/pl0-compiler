@@ -21,10 +21,10 @@
 #define SYMBOLTABLE_H
 
 #include <string>
-#include <map>
 #include <list>
-#include <ostream>
-#include <token.h>
+#include <map>
+
+#include "../include/token.h"
 
 namespace Environment
 {
@@ -67,7 +67,7 @@ namespace Environment
              *
              * @note Adding const after this prototype throws a compile error . . . why?
              */
-            SymbolTableEntry * Find(const std::string lexeme, int &level);
+            SymbolTableEntry * Find(const std::string & lexeme, int & level);
 
             /**
              * @brief Overloaded version of the previous that takes an entry.
@@ -79,30 +79,32 @@ namespace Environment
              * Same as the previous definition of Find, but takes a Symbol Table Entry
              * rather than a lexeme.
              */
-            SymbolTableEntry * Find(SymbolTableEntry &entry, int &level);
+            SymbolTableEntry * Find(const SymbolTableEntry & entry, int & level);
 
             /**
              * @brief Insert the lexeme into the table.
              * @param lexeme The lexeme to be inserted.
              * @param token The value of the token (found in TOKEN_VALUE)
              * @pre lexeme does not exist in the table already.
+             * @return SymbolTableEntry pointer of the new entry.
              *
              * Check that the symbol is not already in the table and then insert
              * it into the table if this is the case.  If the entry exists it will
              * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
              */
-            void Insert(const std::string lexeme, TOKEN_VALUE token = IDENTIFIER);
+            SymbolTableEntry * Insert(const std::string & lexeme, const TOKEN_VALUE & token = IDENTIFIER);
 
             /**
              * @brief Insert the Symbol Table Entry into the table.
              * @param entry SymbolTableEntry reference to insert into the table.
              * @pre entry does not exist in the table already.
+             * @return SymbolTableEntry pointer of the new entry.
              *
              * Check that the entry is not already in the table and then insert it.
              * If the entry is already in the table it will be overwritten.
              * CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
              */
-            void Insert(SymbolTableEntry &entry);
+            SymbolTableEntry * Insert(const SymbolTableEntry & entry);
 
             /**
              * @brief Push a new scope onto the System Table.
@@ -126,7 +128,7 @@ namespace Environment
              *
              * Insert the table into the output stream.
              */
-            friend std::ostream & operator<<(std::ostream &out, SymbolTable &table)
+            friend std::ostream & operator<<(std::ostream & out, SymbolTable & table)
             {
                 return table.print(out);
             }
@@ -174,7 +176,7 @@ namespace Environment
                     * it is found.  If it is not in the table return null so we can have testing
                     * on the return value for the user.
                     */
-                    SymbolTableEntry * Find(const std::string lexeme);
+                    SymbolTableEntry * Find(const std::string & lexeme);
 
                     /**
                     * @brief Overloaded version of the previous that takes an entry.
@@ -185,30 +187,32 @@ namespace Environment
                     * Same as the previous definition of Find, but takes a Symbol Table Entry
                     * rather than a lexeme.
                     */
-                    SymbolTableEntry * Find(const SymbolTableEntry &entry);
+                    SymbolTableEntry * Find(const SymbolTableEntry & entry);
 
                     /**
                     * @brief Insert the lexeme into the table.
                     * @param lexeme The lexeme to be inserted.
                     * @param token The value of the token (found in TOKEN_VALUE)
                     * @pre lexeme does not exist in the table already.
+                    * @return SymbolTableEntry pointer to the newly inserted entry.
                     *
                     * Check that the symbol is not already in the table and then insert
                     * it into the table if this is the case.  If the entry exists it will
                     * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
                     */
-                    void Insert(const std::string lexeme, TOKEN_VALUE token = IDENTIFIER);
+                    SymbolTableEntry * Insert(const std::string & lexeme, const TOKEN_VALUE & token = IDENTIFIER);
 
                     /**
                     * @brief Insert the Symbol Table Entry into the table.
                     * @param entry SymbolTableEntry reference to insert into the table.
                     * @pre entry does not exist in the table already.
+                    * @return SymbolTableEntry pointer to the newly inserted entry.
                     *
                     * Check that the entry is not already in the table and then insert it.
                     * If the entry is already in the table it will be overwritten.
                     * CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
                     */
-                    void Insert(SymbolTableEntry &entry);
+                    SymbolTableEntry * Insert(SymbolTableEntry & entry);
 
                     /**
                      * @brief Stream insertion operator.
@@ -218,7 +222,7 @@ namespace Environment
                      *
                      * Insert the table into the output stream.
                      */
-                    friend std::ostream & operator<<(std::ostream &out, InternalSymbolTable &table)
+                    friend std::ostream & operator<<(std::ostream & out, InternalSymbolTable & table)
                     {
                         return table.print(out);
                     }
@@ -231,7 +235,7 @@ namespace Environment
                      *
                      * Insert the table with an appropriate level mark.
                      */
-                    std::ostream & print(std::ostream &out);
+                    std::ostream & print(std::ostream & out);
 
                 private:
                     std::map<std::string, SymbolTableEntry *> table;
@@ -243,4 +247,4 @@ namespace Environment
 };
 
 #endif // SYMBOLTABLE_H
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

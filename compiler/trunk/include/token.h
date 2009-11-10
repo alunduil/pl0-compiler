@@ -69,7 +69,8 @@ namespace Environment
         LESSTHANEQUAL,
         GREATERTHAN,
         GREATERTHANEQUAL,
-        EOFL
+        EOFL,
+        BINARYCONDITIONALOPERATOR
     };
 
     class Token
@@ -82,12 +83,7 @@ namespace Environment
              * @param entry Entry to a token in the symbol table.
              * @param level The level in the lexical scoping.
              */
-            Token(std::string lexeme, TOKEN_VALUE value = IDENTIFIER, SymbolTableEntry *entry = NULL, int level = 0);
-
-            /**
-             * @brief Constructor.
-             */
-            Token();
+            Token(std::string lexeme = "", TOKEN_VALUE value = IDENTIFIER, SymbolTableEntry *entry = NULL, int level = 0);
 
             /**
              * @brief Get the lexeme for the token.

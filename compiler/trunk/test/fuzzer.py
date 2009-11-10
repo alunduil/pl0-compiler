@@ -26,12 +26,11 @@ import sys
 
 class Fuzzer:
     def __init__(self):
-        self._parseOptions()
+        self._options, self._arguments = self._parseOptions()
         self._tokenCount = 0
-        self._identifiers = {}
-        self._identifiers["functions"] = []
-        self._identifiers["variables"] = []
-        self._identifiers["constants"] = []
+        self._identifiers = {"functions" : [], "variables" : [], "constants" : []}
+        self._output = ""
+        self._generateProgram()
 
     def _parseOptions(self):
         description_list = [
@@ -61,20 +60,11 @@ class Fuzzer:
             default = random.randint(16, 64),
             help="".join(identifier_length_list))
 
-        self._options, self._arguments = parser.parse_args()
+        return parser.parse_args()
 
-    def _incrementTokenCount(self):
+    def _addTerminal(self, terminal):
+        self._output += terminal
         self._tokenCount += 1
-
-    def GenerateCode(self):
-        output = "PROGRAM\n"
-        self._incrementTokenCount()
-        self._addLevel()
-        output += self._generateBlock(0)
-        self._removeLevel()
-        output += "\n."
-        self._incrementTokenCount()
-        return output
 
     def _addLevel(self):
         self._identifiers["functions"].append([])
@@ -86,20 +76,31 @@ class Fuzzer:
         self._identifiers["variables"].pop()
         self._identifiers["constants"].pop()
 
-    def _generateBlock(self, level):
-        output = ""
-        output += self._generateConstIdentifiers(level)
-        output += self._generateVarIdentifiers(level)
-        output += self._generateProcedureIdentifiers(level)
-        output += self._generateStatement(level)
-        return output
-
     def _maxItems(self):
         tmp = (self._options.tokens)/random.randint(max(self._tokenCount, 1),max(self._tokenCount, self._options.tokens))
         return tmp
 
     def _haveMaxTokens(self):
         return (self._tokenCount > self._options.tokens - 1)
+
+    def GetCode(self):
+        return self._output
+
+    def _generateProgram(self)
+        self._addTerminal("PROGRAM\n")
+        self._generateBlock(0)
+        self._addTerminal("\n.\n")
+
+    def _generateBlock(self, level):
+        self._addLevel()
+        self._generateConstantDeclarations(level + 1)
+        self._generateVariableDeclarations(level + 1)
+        self._generateProcedureDeclarations(level + 1)
+        self._generateStatement(level + 1)
+        self._removeLevel()
+
+    def _generateConstantDeclarations(self, level):
+
 
     def _generateConstIdentifier(self, level):
         output = self._generateIdentifier("constants", level)

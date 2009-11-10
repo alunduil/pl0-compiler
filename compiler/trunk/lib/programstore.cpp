@@ -18,18 +18,19 @@
 
 */
 
-#include <programstore.h>
-#include <instruction.h>
 #include <boost/lexical_cast.hpp>
 
-namespace LexicalAnalyzer
+#include "../include/programstore.h"
+#include "../include/instruction.h"
+
+namespace Generator
 {
-    void ProgramStore::Push(const Instruction &instruction)
+    void ProgramStore::Push(const Instruction & instruction)
     {
         this->instructions.push_back(instruction);
     }
 
-    void ProgramStore::Push(const Instruction *instruction)
+    void ProgramStore::Push(const Instruction * instruction)
     {
         this->Push(*instruction);
     }
@@ -39,18 +40,19 @@ namespace LexicalAnalyzer
         return this->instructions.size();
     }
 
-    Instruction & ProgramStore::operator[](const int address)
+    Instruction & ProgramStore::operator[](const int & address)
     {
         return this->instructions[address];
     }
 
     std::string ProgramStore::ToString()
     {
+        using namespace boost;
         std::string output = "";
         int count = 0;
         for (std::vector<Instruction>::iterator i = this->instructions.begin(); i != this->instructions.end(); ++i)
-            output += boost::lexical_cast<std::string, int>(count++) + " " + i->ToString();
+            output += lexical_cast<std::string>(count++) + " " + i->ToString();
         return output;
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;
