@@ -23,7 +23,7 @@
 
 #include <string>
 
-namespace LexicalAnalyzer
+namespace Generator
 {
     class Instruction
     {
@@ -34,7 +34,7 @@ namespace LexicalAnalyzer
              * @param level The level associated with this function.
              * @param address The address for the function.
              */
-            Instruction(std::string function, int level, int address);
+            Instruction(const std::string & function, const int & level, const int & address);
 
             /**
              * @brief Get the function of the instruction.
@@ -58,7 +58,7 @@ namespace LexicalAnalyzer
              * @brief Set the level of the instruction.
              * @param level The level to store.
              */
-            void SetLevel(const int &level);
+            void SetLevel(const int & level);
 
             /**
              * @brief Get the address of the instruction.
@@ -70,7 +70,7 @@ namespace LexicalAnalyzer
              * @brief Set the address of the instruction.
              * @param address The address to store.
              */
-            void SetAddress(const int &address);
+            void SetAddress(const int & address);
 
             /**
              * @brief Convert to string.

@@ -18,29 +18,31 @@
 
 */
 
-#include <instruction.h>
 #include <boost/lexical_cast.hpp>
 
-namespace LexicalAnalyzer
+#include "../include/instruction.h"
+
+namespace Generator
 {
-    Instruction::Instruction(std::string function, int level, int address)
+    Instruction::Instruction(const std::string & function, const int & level, const int & address)
             : function(function), level(level), address(address)
     {
     }
 
-    void Instruction::SetAddress(const int &address)
+    void Instruction::SetAddress(const int & address)
     {
         this->address = address;
     }
 
     std::string Instruction::ToString() const
     {
-        return this->function + " " + boost::lexical_cast<std::string, int>(this->level) + " " + boost::lexical_cast<std::string, int>(this->address) + "\n";
+        using namespace boost;
+        return this->function + " " + lexical_cast<std::string>(this->level) + " " + lexical_cast<std::string>(this->address) + "\n";
     }
 
-    void Instruction::SetFunction(const std::string &function)
+    void Instruction::SetFunction(const std::string & function)
     {
         this->function = function;
     }
 }
-// kate: indent-mode cstyle; space-indent on; indent-width 4; 
+// kate: indent-mode cstyle; space-indent on; indent-width 4;

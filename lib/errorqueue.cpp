@@ -18,97 +18,113 @@
 
 */
 
-#include <errorqueue.h>
-#include <token.h>
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 
-#define DEBUG(A) std::cerr << __FILE__ << ":" << __LINE__ << ": debug: " << (A) << std::endl;
+#include "../include/errorqueue.h"
+#include "../include/output.h"
+#include "../include/token.h"
 
-namespace LexicalAnalyzer
+namespace Environment
 {
-    void ErrorQueue::Push(const Environment::Token &got, const Environment::TOKEN_VALUE &expected, const int &line, const std::string &msg)
+    void ErrorQueue::Push(const Token & got, const TOKEN_VALUE & expected, const int & line, const std::string & msg)
     {
-
-        std::cerr << line << ": error: expected `" << this->castTokenValue(expected) << "' but got `" << got.GetLexeme() << "' token";
-        if (msg.length() > 0) std::cerr << ": " << msg;
-        std::cerr << std::endl;
+        using namespace boost;
+        std::string error = lexical_cast<std::string>(line);
+        error += (this->type == ERROR_T) ? ": error: " : ": warning: ";
+        error += "expected `";
+        error += this->castTokenValue(expected);
+        error += "' but got `";
+        error += got.GetLexeme();
+        error += "' token";
+        if (msg.length() > 0) error += ": " + msg;
+        if (this->type == ERROR_T) ERROR(error);
+        else WARNING(error);
         this->checkCount();
     }
 
-    std::string ErrorQueue::castTokenValue(const Environment::TOKEN_VALUE &expected) const
+    std::string ErrorQueue::castTokenValue(const TOKEN_VALUE & expected) const
     {
-        return (expected == Environment::IDENTIFIER) ? "identifier" :
-               (expected == Environment::ASSIGNMENT) ? ":=" :
-               (expected == Environment::NUMBER) ? "number" :
-               (expected == Environment::IBEGIN) ? "begin" :
-               (expected == Environment::GARBAGE) ? "garbage" :
-               (expected == Environment::EOFL) ? "eof" :
-               (expected == Environment::CALL) ? "call" :
-               (expected == Environment::COMMA) ? "," :
-               (expected == Environment::CONST) ? "const" :
-               (expected == Environment::DIV) ? "div" :
-               (expected == Environment::DIVIDE) ? "/" :
-               (expected == Environment::DO) ? "do" :
-               (expected == Environment::DOT) ? "." :
-               (expected == Environment::END) ? "end" :
-               (expected == Environment::EQUALS) ? "=" :
-               (expected == Environment::GREATERTHAN) ? ">" :
-               (expected == Environment::GREATERTHANEQUAL) ? ">=" :
-               (expected == Environment::IF) ? "if" :
-               (expected == Environment::LEFTPAREN) ? "(" :
-               (expected == Environment::LESSTHAN) ? "<" :
-               (expected == Environment::LESSTHANEQUAL) ? "<=" :
-               (expected == Environment::MINUS) ? "-" :
-               (expected == Environment::MOD) ? "mod" :
-               (expected == Environment::MULTIPLY) ? "*" :
-               (expected == Environment::NOTEQUAL) ? "<>" :
-               (expected == Environment::ODD) ? "odd" :
-               (expected == Environment::PLUS) ? "+" :
-               (expected == Environment::PRINT) ? "print" :
-               (expected == Environment::PROCEDURE) ? "procedure" :
-               (expected == Environment::PROGRAM) ? "program" :
-               (expected == Environment::READ) ? "read" :
-               (expected == Environment::RIGHTPAREN) ? ")" :
-               (expected == Environment::SEMICOLON) ? ";" :
-               (expected == Environment::THEN) ? "then" :
-               (expected == Environment::VAR) ? "var" :
-               (expected == Environment::WHILE) ? "while" : "NOT FOUND!";
+        return (expected == IDENTIFIER) ? "identifier" :
+               (expected == ASSIGNMENT) ? ":=" :
+               (expected == NUMBER) ? "number" :
+               (expected == IBEGIN) ? "begin" :
+               (expected == GARBAGE) ? "garbage" :
+               (expected == EOFL) ? "eof" :
+               (expected == CALL) ? "call" :
+               (expected == COMMA) ? "," :
+               (expected == CONST) ? "const" :
+               (expected == DIV) ? "div" :
+               (expected == DIVIDE) ? "/" :
+               (expected == DO) ? "do" :
+               (expected == DOT) ? "." :
+               (expected == END) ? "end" :
+               (expected == EQUALS) ? "=" :
+               (expected == GREATERTHAN) ? ">" :
+               (expected == GREATERTHANEQUAL) ? ">=" :
+               (expected == IF) ? "if" :
+               (expected == LEFTPAREN) ? "(" :
+               (expected == LESSTHAN) ? "<" :
+               (expected == LESSTHANEQUAL) ? "<=" :
+               (expected == MINUS) ? "-" :
+               (expected == MOD) ? "mod" :
+               (expected == MULTIPLY) ? "*" :
+               (expected == NOTEQUAL) ? "<>" :
+               (expected == ODD) ? "odd" :
+               (expected == PLUS) ? "+" :
+               (expected == PRINT) ? "print" :
+               (expected == PROCEDURE) ? "procedure" :
+               (expected == PROGRAM) ? "program" :
+               (expected == READ) ? "read" :
+               (expected == RIGHTPAREN) ? ")" :
+               (expected == SEMICOLON) ? ";" :
+               (expected == THEN) ? "then" :
+               (expected == VAR) ? "var" :
+               (expected == WHILE) ? "while" :
+               (expected == BINARYCONDITIONALOPERATOR) ? "( = | <> | < | > | <= | >= )" : "NOT FOUND!";
     }
 
     void ErrorQueue::checkCount()
     {
         this->hasErrors = true;
-        if (++this->count == this->maxErrors) throw new ErrorQueueError();
+        if (++this->count == this->maxErrors) throw ErrorQueueError();
     }
 
-    void ErrorQueue::Push(const Environment::Token &got, const ID_PURPOSE &declaration, const int &line, const std::string &msg)
+    void ErrorQueue::Push(const Token & got, const ID_PURPOSE & declaration, const int & line, const std::string & msg)
     {
-        std::cerr << line;
-        if (declaration == DECLARE) std::cerr << ": error: redeclaration of '" << got.GetLexeme() << "'";
-        else std::cerr << ": error: '" << got.GetLexeme() << "' was not declared in this scope";
-        if (msg.length() > 0) std::cerr << ": " << msg;
-        std::cerr << std::endl;
+        using namespace boost;
+        std::string error = lexical_cast<std::string>(line);
+        error += ": error: ";
+        error += (declaration == DECLARE) ? "redeclaration of '" + got.GetLexeme() + "'" : "'" + got.GetLexeme() + "' was not declared in this scope";
+        if (msg.length() > 0) error += ": " + msg;
+        ERROR(error);
         this->checkCount();
     }
 
-    std::string ErrorQueue::castIdType(const Environment::ID_TYPE &expected) const
+    std::string ErrorQueue::castIdType(const ID_TYPE & expected) const
     {
-        return (expected == Environment::VAR_ID) ? "VAR" :
-               (expected == Environment::CONST_ID) ? "CONST" :
-               (expected == Environment::PROC_ID) ? "PROCEDURE" :
-               (expected == Environment::VAR_ID | Environment::CONST_ID) ? "VAR or CONST" : "";
+        return (expected == VAR_ID) ? "VAR" :
+               (expected == CONST_ID) ? "CONST" :
+               (expected == PROC_ID) ? "PROCEDURE" :
+               (expected == VAR_ID | CONST_ID) ? "VAR or CONST" : "";
     }
 
-    void ErrorQueue::Push(const Environment::ID_TYPE &got, const Environment::ID_TYPE &expected, const int &line, const std::string &msg)
+    void ErrorQueue::Push(const ID_TYPE & got, const ID_TYPE & expected, const int & line, const std::string & msg)
     {
-        std::cerr << line << ": error: expected `" << this->castIdType(expected) << "' but got `" << this->castIdType(got) << "' identifier";
-        if (msg.length() > 0) std::cerr << ": " << msg;
-        std::cerr << std::endl;
+        using namespace boost;
+        std::string error = lexical_cast<std::string>(line);
+        error += ": error: expected `";
+        error += this->castIdType(expected);
+        error += "' but got `";
+        error += this->castIdType(got);
+        error += "' identifier";
+        if (msg.length() > 0) error += ": " + msg;
+        ERROR(error);
         this->checkCount();
     }
 
-    ErrorQueue::ErrorQueue(int maxErrors)
-            : count(0), hasErrors(false), maxErrors(maxErrors)
+    ErrorQueue::ErrorQueue(const ERROR_TYPE & type, const int & maxErrors)
+            : count(0), hasErrors(false), type(type), maxErrors(maxErrors)
     {
     }
 

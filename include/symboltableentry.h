@@ -22,7 +22,8 @@
 
 #include <string>
 #include <map>
-#include <token.h>
+
+#include "../include/token.h"
 
 namespace Environment
 {
@@ -33,17 +34,7 @@ namespace Environment
     enum TOKEN_TYPE
     {
         REAL = 513,
-        INTEGER,
-        BOOLEAN,
-        CHARACTER,
-        /**
-         * @todo Add: Enumerated Types, Subrange
-         */
-        RECORD,
-        ARRAY,
-        SET,
-        FILE,
-        POINTER
+        INTEGER
     };
 
     /**

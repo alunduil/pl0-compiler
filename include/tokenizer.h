@@ -31,7 +31,7 @@ namespace Environment
     class SymbolTable;
 };
 
-namespace LexicalAnalyzer
+namespace Analyzer
 {
     class Tokenizer
     {
@@ -41,7 +41,7 @@ namespace LexicalAnalyzer
              * @param in The input stream to take stuff from.
              * @param table The symbol table to look things up in->
              */
-            Tokenizer(std::istream &in, Environment::SymbolTable *table);
+            Tokenizer(std::istream & in, Environment::SymbolTable * table, const bool & verbose = false, const bool & debug = false);
 
             /**
              * @brief Constructor.
@@ -50,7 +50,7 @@ namespace LexicalAnalyzer
              *
              * Calls the stream initializer constructor if necessary.
              */
-            Tokenizer(const std::string fileName, Environment::SymbolTable *table);
+            Tokenizer(const std::string fileName, Environment::SymbolTable * table, const bool & verbose = false, const bool & debug = false);
 
             /**
              * @brief Get a Token.
@@ -104,8 +104,10 @@ namespace LexicalAnalyzer
             std::list<Environment::Token> buffer;
             std::list<Environment::Token>::iterator current;
             int line;
-            std::istream *in;
-            Environment::SymbolTable *table;
+            std::istream * in;
+            Environment::SymbolTable * table;
+            bool verbose;
+            bool debug;
 
             /**
              * @brief Get a token from the stream.

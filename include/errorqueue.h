@@ -22,21 +22,22 @@
 #define ERRORQUEUE_H
 
 #include <string>
-#include <token.h>
-#include <symboltableentry.h>
+
+#include "../include/token.h"
+#include "../include/symboltableentry.h"
 
 namespace Environment
-{
-    class Token;
-    class SymbolTableEntry;
-}
-
-namespace LexicalAnalyzer
 {
     enum ID_PURPOSE
     {
         DECLARE,
         USE
+    };
+
+    enum ERROR_TYPE
+    {
+        ERROR_T,
+        WARNING_T
     };
 
     class ErrorQueue
@@ -45,13 +46,13 @@ namespace LexicalAnalyzer
             /**
              * @brief Constructor.
              */
-            ErrorQueue(int maxErrors = 100);
+            ErrorQueue(const ERROR_TYPE & type, const int & maxErrors = 25);
 
             /**
              * @brief Push an error to the error stream.
              * @param error The error to output.
              */
-            void Push(std::string error);
+            void Push(const std::string & error);
 
             /**
              * @brief Push an error to the error stream.
@@ -60,7 +61,7 @@ namespace LexicalAnalyzer
              * @param line The line we found the error.
              * @param msg Extra information.
              */
-            void Push(const Environment::Token &got, const Environment::TOKEN_VALUE &expected, const int &line, const std::string &msg = "");
+            void Push(const Environment::Token & got, const Environment::TOKEN_VALUE & expected, const int & line, const std::string & msg = "");
 
             /**
              * @brief Push an error to the error stream.
@@ -69,7 +70,7 @@ namespace LexicalAnalyzer
              * @param line The line we found the error.
              * @param msg Extra information.
              */
-            void Push(const Environment::Token &got, const ID_PURPOSE &declaration, const int &line, const std::string &msg = "");
+            void Push(const Environment::Token & got, const ID_PURPOSE & declaration, const int & line, const std::string & msg = "");
 
             /**
              * @brief Push an error to the error stream.
@@ -78,7 +79,7 @@ namespace LexicalAnalyzer
              * @param line The line we found the error.
              * @param msg Extra information.
              */
-            void Push(const Environment::ID_TYPE &got, const Environment::ID_TYPE &expected, const int &line, const std::string &msg = "");
+            void Push(const Environment::ID_TYPE & got, const Environment::ID_TYPE & expected, const int & line, const std::string & msg = "");
 
             /**
              * @brief Tells the caller if we've seen any errors.
@@ -89,6 +90,7 @@ namespace LexicalAnalyzer
             int count;
             int maxErrors;
             bool hasErrors;
+            ERROR_TYPE type;
 
             /**
              * @brief Check the error count.
@@ -102,13 +104,13 @@ namespace LexicalAnalyzer
              * @brief Cast TOKEN_VALUE to string.
              * @param expected The value to convert.
              */
-            std::string castTokenValue(const Environment::TOKEN_VALUE &expected) const;
+            std::string castTokenValue(const Environment::TOKEN_VALUE & expected) const;
 
             /**
              * @brief Cast ID_TYPE to string.
              * @param expected The value to convert.
              */
-            std::string castIdType(const Environment::ID_TYPE &expected) const;
+            std::string castIdType(const Environment::ID_TYPE & expected) const;
     };
 
     class ErrorQueueError
