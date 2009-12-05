@@ -1,210 +1,179 @@
+%{
+    #include <boost/lexical_cast.hpp>
+
+    #include "parser.hpp"
+
+    #define yyterminate() return Analyzer::parser::token::END
+%}
+
 %option c++
 %option yylineno
 %option noyywrap
+%option nounput
+%option batch
+%option debug
 %option caseless
 
+identifier          [[:alpha:]][[:alnum:]]*
+digits              [[:digit:]]+
+optional_fraction   (\.{digits})?
+optional_exponent   (E(\+|-)?{digits})?
+i_num               {digits}
+r_num               {digits}{optional_fraction}{optional_exponent}
+
 %{
-
-#include <token.h>
-#include <symboltable.h>
-
-namespace Environment
-{
-    class SymbolTableEntry;
-}
-
-extern Environment::Token *yytoken;
-extern Environment::SymbolTable *yysymtab;
-
+    #define YY_USER_ACTION yylloc->columns(yyleng);
 %}
 
-letter      [a-zA-Z]
-digit       [0-9]
-number      {digit}+
-identifier  {letter}({letter}|{digit})*
+%x comment
 
 %%
 
-\{.*\} {
-    yytoken = new Environment::Token(yytext, Environment::COMMENT);
-    return Environment::COMMENT;
-}
+%{
+    yylloc->step();
+%}
 
-, {
-    yytoken = new Environment::Token(yytext, Environment::COMMA);
-    return Environment::COMMA;
-}
+\{ {
+    BEGIN(comment);
+    }
 
-{number} {
-    yytoken = new Environment::Token(yytext, Environment::NUMBER);
-    return Environment::NUMBER;
-}
+<*>\n+ {
+    yylloc->lines(yyleng);
+    }
 
-:= {
-    yytoken = new Environment::Token(yytext, Environment::ASSIGNMENT);
-    return Environment::ASSIGNMENT;
-}
+<comment>\} {
+    BEGIN(INITIAL);
+    }
 
-\+ {
-    yytoken = new Environment::Token(yytext, Environment::PLUS);
-    return Environment::PLUS;
-}
+<comment>[^\n\}<<EOF>>]+ { /* empty */
+    }
 
-- {
-    yytoken = new Environment::Token(yytext, Environment::MINUS);
-    return Environment::MINUS;
-}
-
-\* {
-    yytoken = new Environment::Token(yytext, Environment::MULTIPLY);
-    return Environment::MULTIPLY;
-}
-
-\/ {
-    yytoken = new Environment::Token(yytext, Environment::DIVIDE);
-    return Environment::DIVIDE;
-}
-
-= {
-    yytoken = new Environment::Token(yytext, Environment::EQUALS);
-    return Environment::EQUALS;
-}
-
-\( {
-    yytoken = new Environment::Token(yytext, Environment::LEFTPAREN);
-    return Environment::LEFTPAREN;
-}
-
-\) {
-    yytoken = new Environment::Token(yytext, Environment::RIGHTPAREN);
-    return Environment::RIGHTPAREN;
-}
-
-; {
-    yytoken = new Environment::Token(yytext, Environment::SEMICOLON);
-    return Environment::SEMICOLON;
-}
-
-\. {
-    yytoken = new Environment::Token(yytext, Environment::DOT);
-    return Environment::DOT;
-}
-
-\< {
-    yytoken = new Environment::Token(yytext, Environment::LESSTHAN);
-    return Environment::LESSTHAN;
-}
-
-\<\> {
-    yytoken = new Environment::Token(yytext, Environment::NOTEQUAL);
-    return Environment::NOTEQUAL;
-}
-
-\<= {
-    yytoken = new Environment::Token(yytext, Environment::LESSTHANEQUAL);
-    return Environment::LESSTHANEQUAL;
-}
-
-\> {
-    yytoken = new Environment::Token(yytext, Environment::GREATERTHAN);
-    return Environment::GREATERTHAN;
-}
-
-\>= {
-    yytoken = new Environment::Token(yytext, Environment::GREATERTHANEQUAL);
-    return Environment::GREATERTHANEQUAL;
-}
+[[:blank:]]+ { /* empty */
+    }
 
 program {
-    yytoken = new Environment::Token(yytext, Environment::PROGRAM);
-    return Environment::PROGRAM;
-}
-
-const {
-    yytoken = new Environment::Token(yytext, Environment::CONST);
-    return Environment::CONST;
-}
+    return Analyzer::parser::token::PROGRAM;
+    }
 
 var {
-    yytoken = new Environment::Token(yytext, Environment::VAR);
-    return Environment::VAR;
-}
+    return Analyzer::parser::token::VAR;
+    }
+
+array {
+    return Analyzer::parser::token::ARRAY;
+    }
+
+{i_num} {
+    yylval.inum = boost::lexical_cast<int>(yytext);
+    return Analyzer::parser::token::INT_NUM;
+    }
+
+{r_num} {
+    yylval.rnum = boost::lexical_cast<float>(yytext);
+    return Analyzer::parser::token::REAL_NUM;
+    }
+
+\.\. {
+    return Analyzer::parser::token::RANGE_OP;
+    }
+
+of {
+    return Analyzer::parser::token::OF;
+    }
+
+integer {
+    return Analyzer::parser::token::INTEGER;
+    }
+
+real {
+    return Analyzer::parser::token::REAL;
+    }
+
+function {
+    return Analyzer::parser::token::FUNCTION;
+    }
 
 procedure {
-    yytoken = new Environment::Token(yytext, Environment::PROCEDURE);
-    return Environment::PROCEDURE;
-}
+    return Analyzer::parser::token::PROCEDURE;
+    }
 
 begin {
-    yytoken = new Environment::Token(yytext, Environment::IBEGIN);
-    return Environment::IBEGIN;
-}
-
-print {
-    yytoken = new Environment::Token(yytext, Environment::PRINT);
-    return Environment::PRINT;
-}
-
-div {
-    yytoken = new Environment::Token(yytext, Environment::DIV);
-    return Environment::DIV;
-}
-
-mod {
-    yytoken = new Environment::Token(yytext, Environment::MOD);
-    return Environment::MOD;
-}
+    return Analyzer::parser::token::IBEGIN;
+    }
 
 end {
-    yytoken = new Environment::Token(yytext, Environment::END);
-    return Environment::END;
-}
+    return Analyzer::parser::token::IEND;
+    }
 
-odd {
-    yytoken = new Environment::Token(yytext, Environment::ODD);
-    return Environment::ODD;
-}
+:= {
+    return Analyzer::parser::token::ASSIGN_OP;
+    }
 
 if {
-    yytoken = new Environment::Token(yytext, Environment::IF);
-    return Environment::IF;
-}
+    return Analyzer::parser::token::IF;
+    }
 
 then {
-    yytoken = new Environment::Token(yytext, Environment::THEN);
-    return Environment::THEN;
-}
+    return Analyzer::parser::token::THEN;
+    }
 
-call {
-    yytoken = new Environment::Token(yytext, Environment::CALL);
-    return Environment::CALL;
-}
-
-read {
-    yytoken = new Environment::Token(yytext, Environment::READ);
-    return Environment::READ;
-}
+else {
+    return Analyzer::parser::token::ELSE;
+    }
 
 while {
-    yytoken = new Environment::Token(yytext, Environment::WHILE);
-    return Environment::WHILE;
-}
+    return Analyzer::parser::token::WHILE;
+    }
 
 do {
-    yytoken = new Environment::Token(yytext, Environment::DO);
-    return Environment::DO;
-}
+    return Analyzer::parser::token::DO;
+    }
 
-<<EOF>> {
-    yytoken = new Environment::Token(yytext, Environment::EOFL);
-    return Environment::EOFL;
-}
+write {
+    return Analyzer::parser::token::WRITE;
+    }
+
+writeln {
+    return Analyzer::parser::token::WRITELN;
+    }
+
+read {
+    return Analyzer::parser::token::READ;
+    }
+
+\<\> {
+    return Analyzer::parser::token::NOT_EQUAL;
+    }
+
+\<= {
+    return Analyzer::parser::token::LESS_THAN_EQUAL;
+    }
+
+\>= {
+    return Analyzer::parser::token::GREATER_THAN_EQUAL;
+    }
+
+or {
+    return Analyzer::parser::token::OR;
+    }
+
+div {
+    return Analyzer::parser::token::DIV;
+    }
+
+mod {
+    return Analyzer::parser::token::MOD;
+    }
+
+and {
+    return Analyzer::parser::token::AND;
+    }
+
+not {
+    return Analyzer::parser::token::NOT;
+    }
 
 {identifier} {
-    int level = 0;
-    Environment::SymbolTableEntry *entry = yysymtab->Find(yytext, level);
-    yytoken = new Environment::Token(yytext, Environment::IDENTIFIER, entry, level);
-    return Environment::IDENTIFIER;
-}
-
-%%
+    yylval.str = new std::string(yytext);
+    return Analyzer::parser::token::ID;
+    }

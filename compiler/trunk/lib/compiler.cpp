@@ -24,11 +24,12 @@
 
 #include "../include/compiler.h"
 #include "../include/output.h"
-#include "../include/symboltable.h"
-#include "../include/parser.h"
+#include "../include/programstore.h"
+
+#include <parser.h>
 
 Compiler::Compiler(int argc, char *argv[])
-        : debug(false), verbose(false), errors(25)
+        : debug(false), verbose(false)
 {
     using namespace boost::program_options;
     std::string usage;
@@ -58,14 +59,7 @@ Compiler::Compiler(int argc, char *argv[])
         throw CompilerArgumentError(output, description);
     }
 
-    if (variables.count("filename") > 0 && !std::freopen(variables["filename"].as<std::vector<std::string> >()[0].c_str(), "r", stdin))
-    {
-        std::string output("Could not re-open stdin on file: ");
-        output += variables["filename"].as<std::vector<std::string> >()[0];
-        throw CompilerArgumentError(output, description);
-    }
-
-    if (variables.count("errors") > 0) this->errors = variables["errors"].as<int>();
+    this->filenames = variables["filename"].as<std::vector<std::string> >();
 }
 
 boost::program_options::variables_map Compiler::parseOptions(int argc, char *argv[], boost::program_options::options_description * description)
@@ -77,8 +71,7 @@ boost::program_options::variables_map Compiler::parseOptions(int argc, char *arg
     ("verbose,v", "Turn on the verbose flag to have more verbose output.")
     ("filename,f", value<std::vector<std::string> >(), "The file(s) to compile.")
     ("output,o", value<std::string>(), "The output file.")
-    ("errors,e", value<int>(), "The maximum number of errors.")
-    ("warnings,w", "If passed denotes that errors should be generated rather than errors in cases.")
+    ("warnings,w", "If passed denotes that warnings should be generated rather than errors in cases.")
     ;
 
     positional_options_description positional_arguments;
@@ -92,19 +85,20 @@ boost::program_options::variables_map Compiler::parseOptions(int argc, char *arg
 
 void Compiler::Run()
 {
-    using namespace Analyzer;
-    using namespace Environment;
+    using namespace Generator;
 
-    try
+    for (std::vector<std::string>::iterator i = this->filenames.begin(); i != this->filenames.end(); ++i)
     {
-        Parser parser(std::cin, this->errors, this->verbose, this->debug, this->warnings);
-        parser.Parse();
-        if (parser.HaveErrors()) throw ErrorQueueError();
-        std::cout << parser.Code();
-    }
-    catch (ErrorQueueError e)
-    {
-        throw e;
+        ProgramStore code;
+        /**
+         * @note Bison Man says to open a scan section ...
+         */
+        Analyzer::parser foo(*i, code);
+        foo.set_debug_level(this->debug);
+        int res = foo.parse();
+        /**
+         * @note Bison Man says to close a scan section ...
+         */
     }
 }
 

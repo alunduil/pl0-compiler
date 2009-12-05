@@ -23,7 +23,7 @@
 #include <string>
 #include <map>
 
-#include "../include/token.h"
+#include <parser.hpp>
 
 namespace Environment
 {
@@ -81,7 +81,7 @@ namespace Environment
              *
              * Change the type of token of this entry in the symbol table.
              */
-            void SetTokenValue(const TOKEN_VALUE &value);
+            void SetTokenValue(const Analyzer::parser::semantic_type & value);
 
             /**
              * @brief Get the token's type.
@@ -89,7 +89,7 @@ namespace Environment
              *
              * Get the type of token of the entry.
              */
-            TOKEN_VALUE GetTokenValue() const;
+            Analyzer::parser::semantic_type GetTokenValue() const;
 
             /**
              * @brief Get the entry's value.

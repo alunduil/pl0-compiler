@@ -646,23 +646,32 @@ namespace Analyzer
     void Parser::identifier(Environment::Token & token, const Environment::ID_TYPE & type, const Environment::ID_PURPOSE & declaration)
     {
         using namespace Environment;
-        this->match(token, Environment::IDENTIFIER);
+        this->match(token, IDENTIFIER);
 
         switch (declaration)
         {
             case DECLARE:
                 if (token.GetSymbolTableEntry() && token.GetLevel() < 1)
                     this->errors.Push(token, DECLARE, this->tokenizer.GetCurrentLine());
+                /**
+                 * @note Potential memory leak if the lexeme already existed in the table.
+                 */
                 this->table.Insert(token.GetLexeme(), token.GetTokenValue())->SetIdentifierType(type);
                 break;
             case USE:
-                if (!token.GetSymbolTableEntry())
+                if (!token.GetSymbolTableEntry()) // Not in SymbolTable
+                {
                     this->errors.Push(token, USE, this->tokenizer.GetCurrentLine());
-                else
+                    throw ErrorQueueError();
+                }
+                else // Found in SymbolTable
                 {
                     ID_TYPE got = token.GetSymbolTableEntry()->GetIdentifierType();
                     if ((type & got) != got)
+                    {
                         this->errors.Push(got, type, this->tokenizer.GetCurrentLine(), token.GetLexeme());
+                        throw ErrorQueueError();
+                    }
                 }
                 break;
             default:

@@ -9,7 +9,6 @@ procedure fred;
 ;
 begin
     bar := 42;
-    foo := 32;
     fred := 52
 end
 .

@@ -22,6 +22,7 @@
 #define COMPILER_H
 
 #include <boost/program_options.hpp>
+#include <vector>
 
 class Compiler
 {
@@ -43,6 +44,7 @@ class Compiler
         bool verbose;
         int errors;
         bool warnings;
+        std::vector<std::string> filenames;
 
         /**
          * @brief Parse the command line options.
