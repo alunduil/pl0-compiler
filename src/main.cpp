@@ -3,10 +3,8 @@
 
 #include "../include/compiler.h"
 #include "../include/output.h"
-#include "../include/errorqueue.h"
 
 using namespace std;
-using namespace Environment;
 
 int main(int argc, char *argv[])
 {
@@ -25,10 +23,6 @@ int main(int argc, char *argv[])
     catch (CompilerError e)
     {
         if (e.GetMessage().length() > 0) ERROR(e.GetMessage());
-        return EXIT_FAILURE;
-    }
-    catch (ErrorQueueError e)
-    {
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

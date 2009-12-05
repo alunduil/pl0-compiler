@@ -1,10 +1,20 @@
+find_package(BISON)
 find_package(FLEX)
-flex_target(scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
 
-add_library(environment errorqueue.cpp token.cpp symboltable.cpp symboltableentry.cpp)
-add_library(analyzer parser.cpp tokenizer.cpp ${FLEX_scanner_OUTPUTS})
+# Make sure that we include the bison header file for the compiler rather than any
+# other that may spuriously show up.
+include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
+
+bison_target(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp VERBOSE parser.output)
+flex_target(scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp COMPILE_FLAGS "-Cf -Cr")
+add_flex_bison_dependency(scanner parser)
+
+add_library(environment symboltable.cpp symboltableentry.cpp)
+add_library(analyzer ${BISON_parser_OUTPUTS} ${FLEX_scanner_OUTPUTS})
 add_library(generator instruction.cpp programstore.cpp)
 add_library(compiler compiler.cpp)
 
-target_link_libraries(analyzer environment)
-target_link_libraries(compiler analyzer generator)
+add_dependencies(environment parser)
+
+target_link_libraries(analyzer generator)
+target_link_libraries(compiler analyzer)

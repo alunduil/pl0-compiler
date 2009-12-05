@@ -86,9 +86,9 @@ class Fuzzer:
     def GetCode(self):
         return self._output
 
-    def _generateProgram(self)
+    def _generateProgram(self):
         self._addTerminal("PROGRAM\n")
-        self._generateBlock(0)
+        self._generateBlock(-1)
         self._addTerminal("\n.\n")
 
     def _generateBlock(self, level):
@@ -100,84 +100,233 @@ class Fuzzer:
         self._removeLevel()
 
     def _generateConstantDeclarations(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            identifier = self._generateIdentifier("constants", level)
+            if identifier != False:
+                return
+            self._addTerminal("  "*level + "CONST ")
+            self._addTerminal(identifier + " ")
+            self._addTerminal("= ")
+            self._generateSign()
+            self._generateNumber()
+            self._generateMoreConstants(level)
+            self._addTerminal(";\n")
+            self._generateConstantDeclarations(level)
+        return
 
+    def _generateVariableDeclarations(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal("  "*level + "VAR ")
+            self._generateIdentifier("variables", level)
+            self._generateMoreVariables(level)
+            self._addTerminal(";\n")
+            self._generateVariableDeclarations(level)
+        return
 
-    def _generateConstIdentifier(self, level):
-        output = self._generateIdentifier("constants", level)
-        output += " = "
-        self._incrementTokenCount()
+    def _generateProcedureDeclarations(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal("  "*level + "PROCEDURE ")
+            self._generateIdentifier("functions", level)
+            self._addTerminal(";\n")
+            self._generateBlock(level)
+            self._addTerminal("  "*level + ";\n")
+            self._generateProcedureDeclarations(level)
+        return
+
+    def _generateMoreConstants(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal(", ")
+            self._generateIdentifier("constants", level)
+            self._addTerminal("= ")
+            self._generateSign()
+            self._generateNumber()
+            self._generateMoreConstants(level)
+        return
+
+    def _generateMoreVariables(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal(", ")
+            self._generateIdentifier("variables", level)
+            self._generateMoreVariables(level)
+        return
+
+    def _generateStatement(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 7)
+        if choice == 0:
+            identifier = self._getIdentifier("variables", level)
+            if identifier != False:
+                self._addTerminal(identifier + " ")
+                self._addTerminal(":= ")
+                self._generateExpression(level)
+        elif choice == 1:
+            self._addTerminal("BEGIN\n")
+            self._generateStatement(level)
+            self._generateMoreStatements(level)
+            self._addTerminal("END\n")
+        elif choice == 2:
+            self._addTerminal("IF ")
+            self._generateCondition(level)
+            self._addTerminal("THEN ")
+            self._generateStatement(level)
+        elif choice == 3:
+            self._addTerminal("WHILE ")
+            self._generateCondition(level)
+            self._addTerminal("DO ")
+            self._generateStatement(level)
+        elif choice == 4:
+            identifier = self._getIdentifier("variables", level)
+            if identifier != False:
+                self._addTerminal("READ ")
+                self._addTerminal(identifier + " ")
+        elif choice == 5:
+            identifier = self._getIdentifier("functions", level)
+            if identifier != False:
+                self._addTerminal("CALL ")
+                self._addTerminal(identifier)
+        elif choice == 6:
+            self._addTerminal("PRINT ")
+            self._generateExpression(level)
+        return
+
+    def _generateMoreStatements(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal(";\n")
+            self._generateStatement(level)
+            self._generateMoreStatements(level)
+        return
+
+    def _generateExpression(self, level):
+        self._generateTerm(level)
+        self._generateExpressionRHS(level)
+
+    def _generateExpressionRHS(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
         choice = random.randint(0, 2)
-        if (choice == 0):
-            output += " +"
-            self._incrementTokenCount()
-        elif (choice == 1):
-            output += " -"
-            self._incrementTokenCount()
-        output += self._generateNumber()
-        return output
+        if choice == 0:
+            self._addTerminal("+ ")
+            self._generateTerm(level)
+            self._generateExpressionRHS(level)
+        elif choice == 1:
+            self._addTerminal("- ")
+            self._generateTerm(level)
+            self._generateExpressionRHS(level)
+        return
 
-    def _generateProcedureIdentifier(self, level):
-        output = "\t"*level + "PROCEDURE "
-        self._incrementTokenCount()
-        output += self._generateIdentifier("functions", level)
-        output += ";\n"
-        self._incrementTokenCount()
-        self._addLevel()
-        output += self._generateBlock(level + 1)
-        self._removeLevel()
-        output += "\t"*level + ";\n"
-        self._incrementTokenCount()
-        return output
+    def _generateTerm(self, level):
+        self._generateSign()
+        self._generateFactor(level)
+        self._generateTermRHS(level)
 
-    def _generateConstIdentifiers(self, level):
-        output = ""
-        constBlocks = 0
-        while (constBlocks < self._maxItems() and not self._haveMaxTokens()):
-            output += "\t"*level + "CONST "
-            self._incrementTokenCount()
-            output += self._generateConstIdentifier(level)
-            constIdentifiers = 0
-            while (constIdentifiers < self._maxItems() and not self._haveMaxTokens()):
-                output += ", "
-                self._incrementTokenCount()
-                output += self._generateConstIdentifier(level)
-                constIdentifiers += 1
-            output += ";\n"
-            self._incrementTokenCount()
-            constBlocks += 1
-        return output
+    def _generateTermRHS(self, level):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 4)
+        if choice == 0:
+            self._addTerminal("* ")
+            self._generateFactor(level)
+            self._generateTermRHS(level)
+        elif choice == 1:
+            self._addTerminal("/ ")
+            self._generateFactor(level)
+            self._generateTermRHS(level)
+        elif choice == 2:
+            self._addTerminal("DIV ")
+            self._generateFactor(level)
+            self._generateTermRHS(level)
+        elif choice == 3:
+            self._addTerminal("MOD ")
+            self._generateFactor(level)
+            self._generateTermRHS(level)
+        return
 
-    def _generateProcedureIdentifiers(self, level):
-        output = ""
-        procedures = 0
-        while (procedures < self._maxItems() and not self._haveMaxTokens()):
-            output += self._generateProcedureIdentifier(level)
-        return output
+    def _generateFactor(self, level):
+        choice = random.randint(0, 2)
+        if choice == 0:
+            self._addTerminal("(")
+            self._generateExpression(level)
+            self._addTerminal(")")
+        elif choice == 1:
+            tipe = random.randint(0, 1)
+            if tipe == 1:
+                identifier = self._getIdentifier("constants", level)
+                if not identifier:
+                    self._generateNumber()
+            else:
+                identifier = self._getIdentifier("variables", level)
+                if not identifier:
+                    self._generateNumber()
+        else:
+            self._generateNumber()
 
-    def _generateVarIdentifiers(self, level):
-        output = ""
-        varDeclarations = 0
-        while (varDeclarations < self._maxItems() and not self._haveMaxTokens()):
-            output += "\t"*level + "VAR "
-            self._incrementTokenCount()
-            output += self._generateIdentifier("variables", level)
-            varIdentifiers = 0
-            while (varIdentifiers < self._maxItems() and not self._haveMaxTokens()):
-                output += ", "
-                self._incrementTokenCount()
-                output += self._generateIdentifier("variables", level)
-                varIdentifiers += 1
-            output += ";\n"
-            self._incrementTokenCount()
-            varDeclarations += 1
-        return output
+    def _generateCondition(self, level):
+        choice = random.randint(0, 1)
+        if choice == 0:
+            self._addTerminal("ODD ")
+            self._generateExpression(level)
+        else:
+            self._generateExpression(level)
+            self._generateBinaryCondition(level)
+        return
+
+    def _generateBinaryCondition(self, level):
+        choice = random.randint(0, 5)
+        if choice == 0:
+            self._addTerminal("= ")
+            self._generateExpression(level)
+        elif choice == 1:
+            self._addTerminal("<> ")
+            self._generateExpression(level)
+        elif choice == 2:
+            self._addTerminal("< ")
+            self._generateExpression(level)
+        elif choice == 3:
+            self._addTerminal("> ")
+            self._generateExpression(level)
+        elif choice == 4:
+            self._addTerminal("<= ")
+            self._generateExpression(level)
+        else:
+            self._addTerminal(">= ")
+            self._generateExpression(level)
+        return
+
+    def _generateSign(self):
+        if self._tokenCount == self._maxItems() or self._haveMaxTokens():
+            return
+        choice = random.randint(0, 2)
+        if choice == 0:
+            self._addTerminal("+ ")
+        elif choice == 1:
+            self._addTerminal("- ")
+        return
 
     def _generateIdentifier(self, tipe, level):
         output = self._generateCharacter()
         identifierLength = random.randint(0, self._options.varlength - 1)
         for i in range(identifierLength):
             choice = random.randint(0, 1)
-            if (choice == 0):
+            if choice == 0:
                 output += self._generateCharacter()
             else:
                 output += self._generateDigit()
@@ -186,6 +335,7 @@ class Fuzzer:
             or self._identifiers["constants"][level].count(output) > 0
             ):
             output = self._generateIdentifier(tipe, level)
+        # Check that we don't use keywords as identifiers.
         if (output == "DO"
             or output == "IF"
             or output == "VAR"
@@ -193,9 +343,9 @@ class Fuzzer:
             or output == "MOD"
             ):
             output = self._generateIdentifier(tipe, level)
-        self._incrementTokenCount()
         self._identifiers[tipe][level].append(output)
-        return output
+        self._addTerminal(output)
+        return
 
     def _generateCharacter(self):
         return random.choice('ABCDEFGHIJKLMNOPQRSTUVWYXZ')
@@ -205,8 +355,8 @@ class Fuzzer:
         numberLength = random.randint(1, 9)
         for i in range(numberLength):
             output += self._generateDigit()
-        self._incrementTokenCount()
-        return output
+        self._addTerminal(output + " ")
+        return
 
     def _generateDigit(self):
         return random.choice('0123456789')
@@ -219,186 +369,8 @@ class Fuzzer:
         for l in range(realLevel, level):
             if self._identifiers[tipe][l].count(identifier) > 0 and l < level:
                 return False
-        self._incrementTokenCount()
         return identifier
 
-    def _generateStatement(self, level):
-        output = "\t"*level
-        choice = random.randint(0,8)
-        if (choice == 0):
-            tmp = self._getIdentifier("variables", level)
-            if tmp == False:
-                return ""
-            output += tmp
-            output += " := "
-            self._incrementTokenCount()
-            output += self._generateExpression(level)
-        elif (choice == 1):
-            output += "BEGIN\n"
-            self._incrementTokenCount()
-            self._addLevel()
-            output += self._generateStatement(level + 1)
-            self._removeLevel()
-            statements = self._maxItems()
-            while (self._tokenCount < statements):
-                output += ";\n"
-                self._incrementTokenCount()
-                self._addLevel()
-                output += self._generateStatement(level + 1)
-                self._removeLevel()
-                statements += 1
-            output += "\n" + "\t"*level + "END\n"
-            self._incrementTokenCount()
-        elif (choice == 2):
-            output += "IF "
-            self._incrementTokenCount()
-            output += self._generateCondition(level)
-            output += " THEN\n"
-            self._incrementTokenCount()
-            self._addLevel()
-            output += self._generateStatement(level + 1)
-            self._removeLevel()
-        elif (choice == 3):
-            output += "WHILE "
-            self._incrementTokenCount()
-            output += self._generateCondition(level)
-            output += " DO\n"
-            self._incrementTokenCount()
-            self._addLevel()
-            output += self._generateStatement(level + 1)
-            self._removeLevel()
-        elif (choice == 4):
-            output += "READ "
-            self._incrementTokenCount()
-            tmp = self._getIdentifier("variables", level)
-            if tmp == False:
-                return ""
-            output += tmp
-        elif (choice == 5 or choice == 7):
-            output += "CALL "
-            self._incrementTokenCount()
-            tmp = self._getIdentifier("functions", level)
-            if tmp == False:
-                return ""
-            output += tmp
-        elif (choice == 6):
-            output += "PRINT "
-            self._incrementTokenCount()
-            tipe = random.randint(0, 1)
-            if (tipe == 0):
-                tipe = "constants"
-            else:
-                tipe = "variables"
-            tmp = self._getIdentifier(tipe, level)
-            if tmp == False:
-                return ""
-            output += tmp
-        else:
-            output += "\n"
-        output += "\n"
-        return output
-
-    def _generateCondition(self, level):
-        output = ""
-        choice = random.randint(0, 1)
-        if (choice == 0):
-            output += " ODD "
-            self._incrementTokenCount()
-            output += self._generateExpression(level)
-        else:
-            output += self._generateExpression(level)
-            choice = random.randint(0, 5)
-            if (choice == 0):
-                output += " = "
-                self._incrementTokenCount()
-            elif (choice == 1):
-                output += " <> "
-                self._incrementTokenCount()
-            elif (choice == 2):
-                output += " < "
-                self._incrementTokenCount()
-            elif (choice == 3):
-                output += " > "
-                self._incrementTokenCount()
-            elif (choice == 4):
-                output += " <= "
-                self._incrementTokenCount()
-            elif (choice == 5):
-                output += " >= "
-                self._incrementTokenCount()
-            output += self._generateExpression(level)
-        return output
-
-    def _generateExpression(self, level):
-        output = ""
-        output += self._generateTerm(level)
-        terms = 0
-        while (terms < self._maxItems() and not self._haveMaxTokens()):
-            choice = random.randint(0, 1)
-            if (choice == 0):
-                output += " + "
-                self._incrementTokenCount()
-            else:
-                output += " - "
-                self._incrementTokenCount()
-            output += self._generateTerm(level)
-            terms += 1
-        return output
-
-    def _generateTerm(self, level):
-        output = ""
-        choice = random.randint(0, 2)
-        if (choice == 0):
-            output += " +"
-            self._incrementTokenCount()
-        elif (choice == 1):
-            output += " -"
-            self._incrementTokenCount()
-        output += self._generateFactor(level)
-        factors = 0
-        while (factors < max(self._maxItems(), 1)):
-            choice = random.randint(0, 3)
-            if (choice == 0):
-                output += " * "
-                self._incrementTokenCount()
-            elif (choice == 1):
-                output += " / "
-                self._incrementTokenCount()
-            elif (choice == 2):
-                output += " DIV "
-                self._incrementTokenCount()
-            elif (choice == 3):
-                output += " MOD "
-                self._incrementTokenCount()
-            output += self._generateFactor(level)
-            factors += 1
-        return output
-
-    def _generateFactor(self, level):
-        output = ""
-        choice = random.randint(0, 2)
-        if (choice == 2):
-            output += "("
-            self._incrementTokenCount()
-            output += self._generateExpression(level)
-            output += ")"
-            self._incrementTokenCount()
-        elif (choice == 1):
-            tipe = "variables"
-            foo = random.randint(0, 1)
-            if (foo == 0):
-                tipe = "constants"
-            tmp = self._getIdentifier(tipe, level)
-            if tmp == False:
-                return self._generateNumber()
-            output += tmp
-        elif (choice == 0):
-            output += self._generateNumber()
-        return output
-
-def main():
-    foo = Fuzzer()
-    print foo.GenerateCode()
-
 if __name__ == "__main__":
-    main()
+    foo = Fuzzer()
+    print foo.GetCode()
