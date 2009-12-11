@@ -92,7 +92,7 @@ namespace Environment
              * it into the table if this is the case.  If the entry exists it will
              * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
              */
-            SymbolTableEntry * Insert(const std::string & lexeme, const Analyzer:;parser::semantic_type & token = Analyzer::parser::token::ID);
+            SymbolTableEntry * Insert(const std::string & lexeme, const yytokentype & token = ID);
 
             /**
              * @brief Insert the Symbol Table Entry into the table.
@@ -200,7 +200,7 @@ namespace Environment
                     * it into the table if this is the case.  If the entry exists it will
                     * be overwritten.  CHECK THAT THE ENTRY DOES NOT EXIST BEFORE CALLING!
                     */
-                    SymbolTableEntry * Insert(const std::string & lexeme, const TOKEN_VALUE & token = IDENTIFIER);
+                    SymbolTableEntry * Insert(const std::string & lexeme, const yytokentype & token = ID);
 
                     /**
                     * @brief Insert the Symbol Table Entry into the table.

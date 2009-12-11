@@ -3,10 +3,9 @@
 
     #include "parser.hpp"
 
-    #define yyterminate() return Analyzer::parser::token::END
+    #define yyterminate() return END
 %}
 
-%option c++
 %option yylineno
 %option noyywrap
 %option nounput
@@ -21,159 +20,85 @@ optional_exponent   (E(\+|-)?{digits})?
 i_num               {digits}
 r_num               {digits}{optional_fraction}{optional_exponent}
 
-%{
-    #define YY_USER_ACTION yylloc->columns(yyleng);
-%}
-
 %x comment
 
 %%
 
-%{
-    yylloc->step();
-%}
+\{ { BEGIN(comment); }
 
-\{ {
-    BEGIN(comment);
-    }
+<comment>\} { BEGIN(INITIAL); }
 
-<*>\n+ {
-    yylloc->lines(yyleng);
-    }
+<comment>[^\n\}<<EOF>>]+ { /* empty */ }
 
-<comment>\} {
-    BEGIN(INITIAL);
-    }
+[[:blank:]]+ { /* empty */ }
 
-<comment>[^\n\}<<EOF>>]+ { /* empty */
-    }
+program { return PROGRAM; }
 
-[[:blank:]]+ { /* empty */
-    }
+var { return VAR; }
 
-program {
-    return Analyzer::parser::token::PROGRAM;
-    }
-
-var {
-    return Analyzer::parser::token::VAR;
-    }
-
-array {
-    return Analyzer::parser::token::ARRAY;
-    }
+array { return ARRAY; }
 
 {i_num} {
     yylval.inum = boost::lexical_cast<int>(yytext);
-    return Analyzer::parser::token::INT_NUM;
+    return INT_NUM;
     }
 
 {r_num} {
     yylval.rnum = boost::lexical_cast<float>(yytext);
-    return Analyzer::parser::token::REAL_NUM;
+    return REAL_NUM;
     }
 
-\.\. {
-    return Analyzer::parser::token::RANGE_OP;
-    }
+\.\. { return RANGE_OP; }
 
-of {
-    return Analyzer::parser::token::OF;
-    }
+of { return OF; }
 
-integer {
-    return Analyzer::parser::token::INTEGER;
-    }
+integer { return INTEGER; }
 
-real {
-    return Analyzer::parser::token::REAL;
-    }
+real { return REAL; }
 
-function {
-    return Analyzer::parser::token::FUNCTION;
-    }
+function { return FUNCTION; }
 
-procedure {
-    return Analyzer::parser::token::PROCEDURE;
-    }
+procedure { return PROCEDURE; }
 
-begin {
-    return Analyzer::parser::token::IBEGIN;
-    }
+begin { return IBEGIN; }
 
-end {
-    return Analyzer::parser::token::IEND;
-    }
+end { return IEND; }
 
-:= {
-    return Analyzer::parser::token::ASSIGN_OP;
-    }
+:= { return ASSIGN_OP; }
 
-if {
-    return Analyzer::parser::token::IF;
-    }
+if { return IF; }
 
-then {
-    return Analyzer::parser::token::THEN;
-    }
+then { return THEN; }
 
-else {
-    return Analyzer::parser::token::ELSE;
-    }
+else { return ELSE; }
 
-while {
-    return Analyzer::parser::token::WHILE;
-    }
+while { return WHILE; }
 
-do {
-    return Analyzer::parser::token::DO;
-    }
+do { return DO; }
 
-write {
-    return Analyzer::parser::token::WRITE;
-    }
+write { return WRITE; }
 
-writeln {
-    return Analyzer::parser::token::WRITELN;
-    }
+writeln { return WRITELN; }
 
-read {
-    return Analyzer::parser::token::READ;
-    }
+read { return READ; }
 
-\<\> {
-    return Analyzer::parser::token::NOT_EQUAL;
-    }
+\<\> { return NOT_EQUAL; }
 
-\<= {
-    return Analyzer::parser::token::LESS_THAN_EQUAL;
-    }
+\<= { return LESS_THAN_EQUAL; }
 
-\>= {
-    return Analyzer::parser::token::GREATER_THAN_EQUAL;
-    }
+\>= { return GREATER_THAN_EQUAL; }
 
-or {
-    return Analyzer::parser::token::OR;
-    }
+or { return OR; }
 
-div {
-    return Analyzer::parser::token::DIV;
-    }
+div { return DIV; }
 
-mod {
-    return Analyzer::parser::token::MOD;
-    }
+mod { return MOD; }
 
-and {
-    return Analyzer::parser::token::AND;
-    }
+and { return AND; }
 
-not {
-    return Analyzer::parser::token::NOT;
-    }
+not { return NOT; }
 
 {identifier} {
     yylval.str = new std::string(yytext);
-    return Analyzer::parser::token::ID;
+    return ID;
     }

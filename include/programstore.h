@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <stack>
 
 #include "../include/instruction.h"
 
@@ -61,8 +62,20 @@ namespace Generator
              * @return The string of instructions.
              */
             std::string ToString();
+
+            /**
+             * @brief Mark the top address for later use.
+             */
+            void Mark();
+
+            /**
+             * @brief Returns the last marked address and pops it from the stack.
+             * @return The index of the last mark.
+             */
+            int GetMark();
         private:
             std::vector<Instruction> instructions;
+            std::stack<int> marked_addresses;
     };
 }
 
