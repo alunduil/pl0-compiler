@@ -22,29 +22,23 @@
 
 #include <string>
 #include <map>
+#include <list>
+#include <queue>
 
 #include <parser.hpp>
 
 namespace Environment
 {
     /**
-     * @brief A definition of the different types.
-     * @todo Define these values.
-     */
-    enum TOKEN_TYPE
-    {
-        REAL = 513,
-        INTEGER
-    };
-
-    /**
      * @brief A definition of ID types.
      */
     enum ID_TYPE
     {
-        CONST_ID = 1,
+        ARRAY_ID = 1,
         VAR_ID = 2,
-        PROC_ID = 4
+        PROC_ID = 4,
+        FUNC_ID = 8,
+        RETURN_ID = 16
     };
 
     /**
@@ -81,7 +75,7 @@ namespace Environment
              *
              * Change the type of token of this entry in the symbol table.
              */
-            void SetTokenValue(const Analyzer::parser::semantic_type & value);
+            void SetTokenValue(const yytokentype & value);
 
             /**
              * @brief Get the token's type.
@@ -89,7 +83,13 @@ namespace Environment
              *
              * Get the type of token of the entry.
              */
-            Analyzer::parser::semantic_type GetTokenValue() const;
+            yytokentype GetTokenValue() const;
+
+            /**
+             * @brief Get the token's type.
+             * @return The type of the token stored.
+             */
+            TOKEN_TYPE GetTokenType() const;
 
             /**
              * @brief Get the entry's value.
@@ -160,7 +160,7 @@ namespace Environment
              *
              * Construct Symbol Table Entry.
              */
-            SymbolTableEntry(const std::string &lexeme, const int &offset = 0, const TOKEN_VALUE &value = IDENTIFIER);
+            SymbolTableEntry(const std::string &lexeme, const int &offset = 0, const yytokentype & value = ID);
 
             /**
              * @brief Equivalency Operator
@@ -185,6 +185,31 @@ namespace Environment
                 return entry.print(out);
             }
 
+            /**
+             * @brief Set bounds for an array entry.
+             * @param lower The lower bound on the array.
+             * @param upper The upper bound on the array.
+             */
+            void SetBounds(const int & lower, const int & upper);
+
+            /**
+             * @brief Set the parameter list for a function or procedure.
+             * @param param_list The list of parameters as a list of SymbolTableEntry *.
+             */
+            void SetParameterList(const std::list<SymbolTableEntry *> & param_list);
+
+            /**
+             * @brief Append to the parameter list for a function or procedure.
+             * @param param_list The list of parameters as a list of SymbolTableEntry *.
+             */
+            void AppendParameterList(const std::list<SymbolTableEntry *> & param_list);
+
+            /**
+             * @brief Get the parameter list for a function or procedure.
+             * @return The list of parameters.
+             */
+            std::queue<SymbolTableEntry *> GetParameterList() const;
+
         protected:
             /**
              * @brief Print out the entry to the specified stream.
@@ -198,10 +223,13 @@ namespace Environment
         private:
             std::string lexeme;
             int offset;
-            TOKEN_VALUE value;
+            yytokentype value;
             TOKEN_TYPE tokenType;
             ID_TYPE idType;
             int address;
+            int array_bottom;
+            int array_top;
+            std::list<SymbolTableEntry *> param_list;
     };
 };
 
