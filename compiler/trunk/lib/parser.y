@@ -70,6 +70,7 @@
 
 %code {
     YY_DECL;
+    extern int yylineno;
     /**
      * @note DIRTY DIRTY HACK FOR YYERROR ...
      */
@@ -123,7 +124,7 @@
 program:
     PROGRAM ID
         {
-            table->Insert(*$2)->SetIdentifierType(Environment::RETURN_ID);
+            table->Insert(std::string(*$2) + std::string("r"))->SetIdentifierType(Environment::RETURN_ID);
         }
     '(' ')' ';'
         {
@@ -224,7 +225,7 @@ call_id:
             callable = table->Insert(*$1);
             callable->SetIdentifierType(Environment::FUNC_ID);
             table->Push();
-            table->Insert(*$1)->SetIdentifierType(Environment::RETURN_ID);
+            table->Insert(std::string(*$1) + std::string("r"))->SetIdentifierType(Environment::RETURN_ID);
         }
     ;
 
@@ -265,6 +266,11 @@ statement:
         {
             int level;
             table->Find(*$1, level);
+            if ($1->GetIdentifierType() & Environment::FUNC_ID == Environment::FUNC_ID && !table->Find(std::string($1->GetLexeme()) + std::string("r"), level))
+            <%
+                yyerror(output_code, "Can only assign a return value to this function!  Not another function!");
+                YYERROR;
+            %>
             if ($1->GetIdentifierType() & Environment::ARRAY_ID != Environment::ARRAY_ID)
                 output_code->Push(new Generator::Instruction("sto", level, $1->GetOffSet()));
             else
@@ -332,7 +338,7 @@ statement:
         }
     | READ variable
         {
-            switch ($2->GetTokenType())
+            switch ($2->GetType())
             {
                 case Environment::REAL:
                     output_code->Push(new Generator::Instruction("opr", 0, /** @note floating point read code */ 0));
@@ -385,7 +391,7 @@ procedure_statement:
             Environment::SymbolTableEntry * entry = table->Find(*$1, level);
             std::queue<Environment::SymbolTableEntry *> tmp(entry->GetParameterList());
             for (; !param_list.empty() && !tmp.empty(); param_list.pop(), tmp.pop())
-                if (tmp.front()->GetTokenType() != param_list.front())
+                if (tmp.front()->GetType() != param_list.front())
                 <%
                     yyerror(output_code, "Wrong parameters passed!");
                     YYERROR;
@@ -606,14 +612,14 @@ factor:
     ID
         {
             int level;
-            $$ = table->Find(*$1, level)->GetTokenType();
+            $$ = table->Find(*$1, level)->GetType();
             /** Load the ID */
         }
     | ID '(' expression_list ')'
         {
             int level;
             Environment::SymbolTableEntry * entry = table->Find(*$1, level);
-            $<token_type>$ = entry->GetTokenType();
+            $<token_type>$ = entry->GetType();
             /** Call the ID with the following parameters. */
         }
     | INT_NUM { $$ = Environment::INTEGER; }
@@ -656,5 +662,5 @@ void dirty_yyerror(Generator::ProgramStore * output_code, const std::string & ms
 {
     using namespace boost;
     using namespace std;
-    ERROR(/*lexical_cast<string>(l.first_line) + string(":") + lexical_cast<string>(l.last_line) + */string(": error: ") + msg);
+    ERROR(lexical_cast<string>(yylineno) + string(": error: ") + msg);
 }

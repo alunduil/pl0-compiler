@@ -65,7 +65,7 @@ namespace Environment
         return tmp;
     }
 
-    SymbolTableEntry * SymbolTable::Insert(const std::string & lexeme, const TOKEN_VALUE & value)
+    SymbolTableEntry * SymbolTable::Insert(const std::string & lexeme, const yytokentype & value)
     {
         SymbolTableEntry * tmp = new SymbolTableEntry(lexeme, 0, value);
         SymbolTableEntry * ret = this->Insert(*tmp);
@@ -121,7 +121,7 @@ namespace Environment
         return this->count;
     }
 
-    SymbolTableEntry * SymbolTable::InternalSymbolTable::Insert(const std::string & lexeme, const TOKEN_VALUE & value)
+    SymbolTableEntry * SymbolTable::InternalSymbolTable::Insert(const std::string & lexeme, const yytokentype & value)
     {
         SymbolTableEntry *tmp = new SymbolTableEntry(lexeme, 0, value);
         return this->Insert(*tmp);
