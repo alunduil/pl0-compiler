@@ -86,12 +86,6 @@ namespace Environment
             yytokentype GetTokenValue() const;
 
             /**
-             * @brief Get the token's type.
-             * @return The type of the token stored.
-             */
-            TOKEN_TYPE GetTokenType() const;
-
-            /**
              * @brief Get the entry's value.
              * @return Value of the entry.
              */

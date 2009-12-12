@@ -1,6 +1,8 @@
-PROGRAM
+PROGRAM test () ; 
 { Missing an equals sign as well as a semicolon on the next line. }
 { DOES NOT COMPILE! }
-CONST X 723, S5D107Q4 = 9855408
-CONST IM =  +138, I855 =  +27202, K4 =  -6;
+VAR X, S5D107Q4 : INTEGER;
+VAR IM, I855, K4 : REAL;
+BEGIN
+END
 .

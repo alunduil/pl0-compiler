@@ -18,14 +18,40 @@
 */
 
 #include <string>
-#include <symboltableentry.h>
 #include <ostream>
+
+#include "../include/symboltableentry.h"
 
 namespace Environment
 {
-    SymbolTableEntry::SymbolTableEntry(const std::string &lexeme, const int &offset, const TOKEN_VALUE &value)
+    SymbolTableEntry::SymbolTableEntry(const std::string &lexeme, const int &offset, const yytokentype &value)
     :lexeme(lexeme), offset(offset), value(value), tokenType(REAL)
     {
+    }
+
+    void SymbolTableEntry::SetBounds(const int & lower, const int & upper)
+    {
+        this->array_bottom = lower;
+        this->array_top = upper;
+    }
+
+    void SymbolTableEntry::SetParameterList(const std::list<SymbolTableEntry *> & param_list)
+    {
+        this->param_list.clear();
+        this->AppendParameterList(param_list);
+    }
+
+    void SymbolTableEntry::AppendParameterList(const std::list<SymbolTableEntry *> & param_list)
+    {
+        this->param_list.insert(this->param_list.end(), param_list.begin(), param_list.end());
+    }
+
+    std::queue<SymbolTableEntry *> SymbolTableEntry::GetParameterList() const
+    {
+        std::queue<SymbolTableEntry *> ret;
+        for (std::list<SymbolTableEntry *>::const_iterator i = this->param_list.begin(); i != this->param_list.end(); ++i)
+            ret.push(*i);
+        return ret;
     }
 
     ID_TYPE SymbolTableEntry::GetIdentifierType() const
@@ -48,7 +74,7 @@ namespace Environment
         return this->offset;
     }
 
-    TOKEN_VALUE SymbolTableEntry::GetTokenValue() const
+    yytokentype SymbolTableEntry::GetTokenValue() const
     {
         return this->value;
     }
@@ -68,7 +94,7 @@ namespace Environment
         this->offset = offset;
     }
 
-    void SymbolTableEntry::SetTokenValue(const TOKEN_VALUE &token)
+    void SymbolTableEntry::SetTokenValue(const yytokentype &token)
     {
         this->value = token;
     }

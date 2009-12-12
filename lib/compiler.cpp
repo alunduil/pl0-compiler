@@ -21,12 +21,13 @@
 #include <iostream>
 #include <fstream>
 #include <cstdio>
+#include <stdio.h>
 
 #include "../include/compiler.h"
 #include "../include/output.h"
 #include "../include/programstore.h"
 
-#include <parser.h>
+#include <parser.hpp>
 
 Compiler::Compiler(int argc, char *argv[])
         : debug(false), verbose(false)
@@ -52,13 +53,15 @@ Compiler::Compiler(int argc, char *argv[])
     this->verbose = variables.count("verbose") > 0;
     this->warnings = variables.count("warnings") > 0;
 
-    if (variables.count("output") > 0 && !std::freopen(variables["output"].as<std::string>().c_str(), "w", stdout) || !std::freopen("a.st", "w", stdout))
+    this->output = (variables.count("output") > 0) ? variables["output"].as<std::string>().c_str() : "a.st";
+    if (!std::freopen(this->output.c_str(), "w", stdout))
     {
         std::string output("Could not re-open stdout on file: ");
         output += variables["output"].as<std::string>();
         throw CompilerArgumentError(output, description);
     }
 
+    if (variables.count("filename") < 1) throw CompilerArgumentError("", description);
     this->filenames = variables["filename"].as<std::vector<std::string> >();
 }
 
@@ -83,22 +86,41 @@ boost::program_options::variables_map Compiler::parseOptions(int argc, char *arg
     return variables;
 }
 
+/**
+ * @note Prototype for yyparse ...
+ */
+int yyparse(Generator::ProgramStore *);
+
 void Compiler::Run()
 {
     using namespace Generator;
 
-    for (std::vector<std::string>::iterator i = this->filenames.begin(); i != this->filenames.end(); ++i)
+    if (!this->filenames.empty())
+        for (std::vector<std::string>::iterator i = this->filenames.begin(); i != this->filenames.end(); ++i)
+        {
+            if (!std::freopen(i->c_str(), "r", stdin))
+            {
+                std::string output("Could not re-open stdin on file: ");
+                output += *i;
+                throw CompilerError(output);
+            }
+            ProgramStore code;
+            if (yyparse(&code) > 0)
+            {
+                std::remove(this->output.c_str());
+                throw CompilerError("Parse Error Occured!");
+            }
+            std::cout << code.ToString() << std::endl;
+        }
+    else
     {
         ProgramStore code;
-        /**
-         * @note Bison Man says to open a scan section ...
-         */
-        Analyzer::parser foo(*i, code);
-        foo.set_debug_level(this->debug);
-        int res = foo.parse();
-        /**
-         * @note Bison Man says to close a scan section ...
-         */
+        if (yyparse(&code) > 0)
+        {
+            std::remove(this->output.c_str());
+            throw CompilerError("Parse Error Occured!");
+        }
+        std::cout << code.ToString() << std::endl;
     }
 }
 

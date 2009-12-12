@@ -1,5 +1,6 @@
 %{
     #include <boost/lexical_cast.hpp>
+    #include <iostream>
 
     #include "parser.hpp"
 
@@ -10,7 +11,6 @@
 %option noyywrap
 %option nounput
 %option batch
-%option debug
 %option caseless
 
 identifier          [[:alpha:]][[:alnum:]]*
@@ -28,9 +28,9 @@ r_num               {digits}{optional_fraction}{optional_exponent}
 
 <comment>\} { BEGIN(INITIAL); }
 
-<comment>[^\n\}<<EOF>>]+ { /* empty */ }
+<comment>([^\n\}<<EOF>>]|e|o)+ { /* empty */ }
 
-[[:blank:]]+ { /* empty */ }
+<*>[\n] { yylineno++; }
 
 program { return PROGRAM; }
 
@@ -39,12 +39,12 @@ var { return VAR; }
 array { return ARRAY; }
 
 {i_num} {
-    yylval.inum = boost::lexical_cast<int>(yytext);
+    yylval->inum = boost::lexical_cast<int>(yytext);
     return INT_NUM;
     }
 
 {r_num} {
-    yylval.rnum = boost::lexical_cast<float>(yytext);
+    yylval->rnum = boost::lexical_cast<float>(yytext);
     return REAL_NUM;
     }
 
@@ -98,7 +98,11 @@ and { return AND; }
 
 not { return NOT; }
 
+[[:blank:]] { /* empty */ }
+
 {identifier} {
-    yylval.str = new std::string(yytext);
+    yylval->str = new std::string(yytext);
     return ID;
     }
+
+. { return yytext[0]; }

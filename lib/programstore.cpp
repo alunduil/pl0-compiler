@@ -25,6 +25,18 @@
 
 namespace Generator
 {
+    void ProgramStore::Mark()
+    {
+        this->marked_addresses.push(this->TopAddress());
+    }
+
+    int ProgramStore::GetMark()
+    {
+        int ret = this->marked_addresses.top();
+        this->marked_addresses.pop();
+        return ret;
+    }
+
     void ProgramStore::Push(const Instruction & instruction)
     {
         this->instructions.push_back(instruction);

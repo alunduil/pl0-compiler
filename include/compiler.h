@@ -45,6 +45,7 @@ class Compiler
         int errors;
         bool warnings;
         std::vector<std::string> filenames;
+        std::string output;
 
         /**
          * @brief Parse the command line options.
