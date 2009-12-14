@@ -15,7 +15,7 @@ begin
     writeln 0;
 
     baz := 1;
-    {test21a := 2;}
+    test21a := 2;
     test21b := 3
 end
 .

@@ -6,7 +6,7 @@
 }
 PROGRAM test07();
 VAR i, j : integer;
-VAR bar : array [ -10 .. 10 ] of real;
+VAR bar : array [ -10 .. 10 ] of integer;
 BEGIN
   writeln 20;
 
