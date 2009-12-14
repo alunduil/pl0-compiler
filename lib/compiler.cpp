@@ -54,7 +54,10 @@ Compiler::Compiler(int argc, char *argv[])
     this->warnings = variables.count("warnings") > 0;
 
     this->output = (variables.count("output") > 0) ? variables["output"].as<std::string>().c_str() : "a.st";
-    if (!std::freopen(this->output.c_str(), "w", stdout))
+#ifndef NDEBUG
+    DEBUG(this->output);
+#endif
+    if (this->output != "-" && !std::freopen(this->output.c_str(), "w", stdout))
     {
         std::string output("Could not re-open stdout on file: ");
         output += variables["output"].as<std::string>();
@@ -63,6 +66,8 @@ Compiler::Compiler(int argc, char *argv[])
 
     if (variables.count("filename") < 1) throw CompilerArgumentError("", description);
     this->filenames = variables["filename"].as<std::vector<std::string> >();
+
+    this->optimization_level = (variables.count("optimize") > 0) ? variables["optimize"].as<int>() : 0;
 }
 
 boost::program_options::variables_map Compiler::parseOptions(int argc, char *argv[], boost::program_options::options_description * description)
@@ -73,8 +78,9 @@ boost::program_options::variables_map Compiler::parseOptions(int argc, char *arg
     ("debug,d", "Turn on the debug flag to have extremely verbose output.")
     ("verbose,v", "Turn on the verbose flag to have more verbose output.")
     ("filename,f", value<std::vector<std::string> >(), "The file(s) to compile.")
-    ("output,o", value<std::string>(), "The output file.")
+    ("output,o", value<std::string>(), "The output file.  If '-' is passed prints instructions to stdout.")
     ("warnings,w", "If passed denotes that warnings should be generated rather than errors in cases.")
+    ("optimize,O", value<int>(), "The level of optimization to perform.")
     ;
 
     positional_options_description positional_arguments;
@@ -89,37 +95,28 @@ boost::program_options::variables_map Compiler::parseOptions(int argc, char *arg
 /**
  * @note Prototype for yyparse ...
  */
-int yyparse(Generator::ProgramStore *);
+int yyparse(const std::string &, Generator::ProgramStore *);
 
 void Compiler::Run()
 {
     using namespace Generator;
 
-    if (!this->filenames.empty())
-        for (std::vector<std::string>::iterator i = this->filenames.begin(); i != this->filenames.end(); ++i)
-        {
-            if (!std::freopen(i->c_str(), "r", stdin))
-            {
-                std::string output("Could not re-open stdin on file: ");
-                output += *i;
-                throw CompilerError(output);
-            }
-            ProgramStore code;
-            if (yyparse(&code) > 0)
-            {
-                std::remove(this->output.c_str());
-                throw CompilerError("Parse Error Occured!");
-            }
-            std::cout << code.ToString() << std::endl;
-        }
-    else
+    for (std::vector<std::string>::iterator i = this->filenames.begin(); i != this->filenames.end(); ++i)
     {
-        ProgramStore code;
-        if (yyparse(&code) > 0)
+        if (!std::freopen(i->c_str(), "r", stdin))
         {
-            std::remove(this->output.c_str());
-            throw CompilerError("Parse Error Occured!");
+            std::string output("Could not re-open stdin on file: ");
+            output += *i;
+            throw CompilerError(output);
         }
+        ProgramStore code;
+        if (yyparse(*i, &code) > 0)
+        {
+            if (this->output != "-") std::remove(this->output.c_str());
+            throw CompilerError("");
+        }
+        VERBOSE("Printing Instructions: ");
+        code.Optimize(this->optimization_level);
         std::cout << code.ToString() << std::endl;
     }
 }

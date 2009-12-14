@@ -187,22 +187,34 @@ namespace Environment
             void SetBounds(const int & lower, const int & upper);
 
             /**
-             * @brief Set the parameter list for a function or procedure.
-             * @param param_list The list of parameters as a list of SymbolTableEntry *.
+             * @brief Get the lower bound for an array entry.
+             * @return The lower bound of the array.
              */
-            void SetParameterList(const std::list<SymbolTableEntry *> & param_list);
+            int GetLowerBound() const;
+
+            /**
+             * @brief Get the upper bound for an array entry.
+             * @return The upper bound of the array.
+             */
+            int GetUpperBound() const;
+
+            /**
+             * @brief Return the size of the entry.
+             * @return The number of stack elements of this entry.
+             */
+            int GetSize() const;
 
             /**
              * @brief Append to the parameter list for a function or procedure.
-             * @param param_list The list of parameters as a list of SymbolTableEntry *.
+             * @param param The parameter as a SymbolTableEntry *.
              */
-            void AppendParameterList(const std::list<SymbolTableEntry *> & param_list);
+            void AddParameter(const SymbolTableEntry & param);
 
             /**
              * @brief Get the parameter list for a function or procedure.
              * @return The list of parameters.
              */
-            std::queue<SymbolTableEntry *> GetParameterList() const;
+            std::queue<TOKEN_TYPE> GetParameterList();
 
         protected:
             /**
@@ -223,7 +235,7 @@ namespace Environment
             int address;
             int array_bottom;
             int array_top;
-            std::list<SymbolTableEntry *> param_list;
+            std::list<SymbolTableEntry> param_list;
     };
 };
 

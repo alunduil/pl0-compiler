@@ -46,6 +46,7 @@ class Compiler
         bool warnings;
         std::vector<std::string> filenames;
         std::string output;
+        int optimization_level;
 
         /**
          * @brief Parse the command line options.

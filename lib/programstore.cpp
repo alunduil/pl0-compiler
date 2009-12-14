@@ -19,24 +19,14 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <iostream>
 
 #include "../include/programstore.h"
 #include "../include/instruction.h"
+#include "../include/output.h"
 
 namespace Generator
 {
-    void ProgramStore::Mark()
-    {
-        this->marked_addresses.push(this->TopAddress());
-    }
-
-    int ProgramStore::GetMark()
-    {
-        int ret = this->marked_addresses.top();
-        this->marked_addresses.pop();
-        return ret;
-    }
-
     void ProgramStore::Push(const Instruction & instruction)
     {
         this->instructions.push_back(instruction);
@@ -45,6 +35,18 @@ namespace Generator
     void ProgramStore::Push(const Instruction * instruction)
     {
         this->Push(*instruction);
+    }
+
+    void ProgramStore::Mark()
+    {
+        this->marked_addresses.push(this->TopAddress());
+    }
+
+    int ProgramStore::GetMark()
+    {
+        int ret = int(this->marked_addresses.top());
+        this->marked_addresses.pop();
+        return ret;
     }
 
     int ProgramStore::TopAddress() const
@@ -65,6 +67,24 @@ namespace Generator
         for (std::vector<Instruction>::iterator i = this->instructions.begin(); i != this->instructions.end(); ++i)
             output += lexical_cast<std::string>(count++) + " " + i->ToString();
         return output;
+    }
+
+    void ProgramStore::Optimize(const int & level)
+    {
+        if (level < 1) return;
+
+        int lineno = 0;
+        int startline = 0;
+
+        for (std::vector<Instruction>::iterator i = this->instructions.begin(); i != this->instructions.end(); ++i, ++lineno)
+            if (i->GetFunction() == "jmp" && i->GetAddress() == lineno + 1)
+            {
+                startline = lineno;
+                for (std::vector<Instruction>::iterator j = i; j != this->instructions.end(); ++j)
+                    if ((j->GetFunction() == "jpc" || j->GetFunction() == "jmp") && j->GetAddress() >= startline)
+                        j->SetAddress(j->GetAddress() - 1);
+                this->instructions.erase(i);
+            }
     }
 }
 // kate: indent-mode cstyle; space-indent on; indent-width 4;

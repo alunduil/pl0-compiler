@@ -37,6 +37,14 @@ namespace Generator
             Instruction(const std::string & function, const int & level, const int & address);
 
             /**
+             * @brief Constructor.
+             * @param function The function for this instruction.
+             * @param level The level associated with this function.
+             * @param address The address for the function.
+             */
+            Instruction(const std::string & function, const int & level, const float & address);
+
+            /**
              * @brief Get the function of the instruction.
              * @return The function.
              */
@@ -73,6 +81,12 @@ namespace Generator
             void SetAddress(const int & address);
 
             /**
+             * @brief Set the address of the instruction.
+             * @param address The address to store.
+             */
+            void SetAddress(const float & address);
+
+            /**
              * @brief Convert to string.
              * @return A string for the instruction.
              */
@@ -80,7 +94,16 @@ namespace Generator
         private:
             std::string function;
             int level;
-            int address;
+            union
+            {
+                int inum;
+                float rnum;
+            } address;
+            enum
+            {
+                INUM,
+                RNUM
+            } type;
     };
 }
 

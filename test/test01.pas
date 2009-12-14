@@ -1,8 +1,11 @@
-PROGRAM test () ; 
-{ Missing an equals sign as well as a semicolon on the next line. }
-{ DOES NOT COMPILE! }
-VAR X, S5D107Q4 : INTEGER;
-VAR IM, I855, K4 : REAL;
+{ 
+  The simplest program to check the program production:
+    program: PROGRAM ID '(' ')' ';' declarations subprogram_declarations compound_statement '.'
+  Also, tests the compound_statement production:
+    compound_statement: BEGIN optional_statements END
+}
+PROGRAM test01();
 BEGIN
+  writeln 0
 END
 .

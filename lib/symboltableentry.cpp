@@ -19,13 +19,16 @@
 
 #include <string>
 #include <ostream>
+#include <boost/tuple/tuple.hpp>
+#include <iostream>
 
 #include "../include/symboltableentry.h"
+#include "../include/output.h"
 
 namespace Environment
 {
     SymbolTableEntry::SymbolTableEntry(const std::string &lexeme, const int &offset, const yytokentype &value)
-    :lexeme(lexeme), offset(offset), value(value), tokenType(REAL)
+            : lexeme(lexeme), offset(offset), value(value), tokenType(REAL)
     {
     }
 
@@ -35,22 +38,31 @@ namespace Environment
         this->array_top = upper;
     }
 
-    void SymbolTableEntry::SetParameterList(const std::list<SymbolTableEntry *> & param_list)
+    int SymbolTableEntry::GetSize() const
     {
-        this->param_list.clear();
-        this->AppendParameterList(param_list);
+        return this->array_top - this->array_bottom + 1;
     }
 
-    void SymbolTableEntry::AppendParameterList(const std::list<SymbolTableEntry *> & param_list)
+    int SymbolTableEntry::GetLowerBound() const
     {
-        this->param_list.insert(this->param_list.end(), param_list.begin(), param_list.end());
+        return this->array_bottom;
     }
 
-    std::queue<SymbolTableEntry *> SymbolTableEntry::GetParameterList() const
+    int SymbolTableEntry::GetUpperBound() const
     {
-        std::queue<SymbolTableEntry *> ret;
-        for (std::list<SymbolTableEntry *>::const_iterator i = this->param_list.begin(); i != this->param_list.end(); ++i)
-            ret.push(*i);
+        return this->array_top;
+    }
+
+    void SymbolTableEntry::AddParameter(const SymbolTableEntry & param)
+    {
+        this->param_list.push_back(param);
+    }
+
+    std::queue<TOKEN_TYPE> SymbolTableEntry::GetParameterList()
+    {
+        std::queue<TOKEN_TYPE> ret;
+        for (std::list<SymbolTableEntry>::iterator i = this->param_list.begin(); i != this->param_list.end(); ++i)
+            ret.push(i->GetType());
         return ret;
     }
 
@@ -111,7 +123,7 @@ namespace Environment
 
     std::ostream & SymbolTableEntry::print(std::ostream & out) const
     {
-        return out << this->lexeme << ", " << this->value << ", " << this->tokenType << ", " << this->offset;
+        return out << this->lexeme << ", " << this->value << ", " << this->tokenType << ", " << this->offset << ", " << this->idType;
     };
 
     void SymbolTableEntry::SetAddress(const int &address)
