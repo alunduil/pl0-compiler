@@ -164,7 +164,7 @@ namespace Environment
                      * @brief Count of elements in table.
                      * @return The number of elements at this level.
                      */
-                    int Count() const;
+                    int Count();
 
                     /**
                     * @brief Find an entry in the table based on the lexeme.

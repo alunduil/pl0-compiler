@@ -73,6 +73,12 @@ namespace Generator
              * @return The index of the last mark.
              */
             int GetMark();
+
+            /**
+             * @brief Optimizes the code in predictable ways based on an optimization level.
+             * @param level The level of optimization to perform.
+             */
+            void Optimize(const int & level);
         private:
             std::vector<Instruction> instructions;
             std::stack<int> marked_addresses;

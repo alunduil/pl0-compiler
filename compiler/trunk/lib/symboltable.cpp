@@ -18,9 +18,11 @@
 */
 
 #include <iostream>
+#include <boost/tuple/tuple_io.hpp>
 
 #include "../include/symboltable.h"
 #include "../include/symboltableentry.h"
+#include "../include/output.h"
 
 namespace Environment
 {
@@ -116,8 +118,14 @@ namespace Environment
         return &entry;
     };
 
-    int SymbolTable::InternalSymbolTable::Count() const
+    int SymbolTable::InternalSymbolTable::Count()
     {
+        this->count = 3;
+        for (std::map<std::string, SymbolTableEntry *>::iterator i = this->table.begin(); i != this->table.end(); ++i)
+        {
+            i->second->SetOffSet(this->count);
+            this->count += ((i->second->GetIdentifierType() & ARRAY_ID) == ARRAY_ID) ? i->second->GetSize() : 1;
+        }
         return this->count;
     }
 

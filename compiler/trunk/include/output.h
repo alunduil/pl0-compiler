@@ -28,8 +28,7 @@
 #define LIGHT_GREEN "\033[01;32m"
 
 #ifndef NDEBUG
-#define DEBUG(A) if (this->debug) \
-    std::cerr << YELLOW << __FILE__ << ":" << __LINE__ << ": debug: " << #A << " -> " << (A) << GRAY << std::endl
+#define DEBUG(A) std::cerr << YELLOW << __FILE__ << ":" << __LINE__ << ": debug: " << #A << " -> " << (A) << GRAY << std::endl
 #endif
 
 #define VERBOSE(A) if (this->verbose) \

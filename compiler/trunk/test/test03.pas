@@ -1,14 +1,11 @@
-program
-{Checking the assignment variable}
-{CONST should not be assignable, VAR should, PROCEDURE should not.}
-const foo = 27;
-var bar;
-procedure fred;
-    begin
-    end
-;
-begin
-    bar := 42;
-    fred := 52
-end
+{
+  Testing the type production:
+    type: standard_type | ARRAY '[' NUM RANGE_OP NUM ']' OF standard_type
+}
+PROGRAM test03();
+VAR bar, baz, qux : array [ -10 .. 10 ] of integer;
+VAR quux, corge, grault : array [ 0 .. 20 ] of real;
+BEGIN
+  writeln 0
+END
 .

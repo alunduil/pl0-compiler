@@ -4,6 +4,8 @@
 
     #include "parser.hpp"
 
+    #include <output.h>
+
     #define yyterminate() return END
 %}
 
@@ -15,10 +17,10 @@
 
 identifier          [[:alpha:]][[:alnum:]]*
 digits              [[:digit:]]+
-optional_fraction   (\.{digits})?
-optional_exponent   (E(\+|-)?{digits})?
+optional_fraction   (\.{digits})
+optional_exponent   (E(\+|-)?{digits})
 i_num               {digits}
-r_num               {digits}{optional_fraction}{optional_exponent}
+r_num               ({digits}{optional_fraction}?{optional_exponent}?|{digits}?{optional_fraction}{optional_exponent}?|{digits}\.)
 
 %x comment
 
@@ -28,9 +30,9 @@ r_num               {digits}{optional_fraction}{optional_exponent}
 
 <comment>\} { BEGIN(INITIAL); }
 
-<comment>([^\n\}<<EOF>>]|e|o)+ { /* empty */ }
+<comment>([^\n\}<<EOF>>]|e|o|f)+ { /* empty */ }
 
-<*>[\n] { yylineno++; }
+<*>[\n] { /* empty */ }
 
 program { return PROGRAM; }
 
@@ -38,7 +40,7 @@ var { return VAR; }
 
 array { return ARRAY; }
 
-{i_num} {
+{i_num}/[^\.E] {
     yylval->inum = boost::lexical_cast<int>(yytext);
     return INT_NUM;
     }
