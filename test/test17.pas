@@ -1,6 +1,5 @@
 { function calls self and parent level's function }
 program test17();
-var numelements, i: integer;
 
 function fib(n : integer) : integer;
 begin
@@ -11,13 +10,7 @@ end;
 
 begin
   writeln 1;
-  read numelements;
 
-  i := 1;
-  while i < numelements do
-  begin
-    write fib(i);
-    i := i + 1
-  end
+  write fib(5)
 end
 .

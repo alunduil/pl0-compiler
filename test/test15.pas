@@ -15,6 +15,7 @@ END;
 
 BEGIN
   writeln 1;
-  test15a
+  test15a;
+  writeln bar
 END
 .

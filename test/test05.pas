@@ -43,6 +43,9 @@ BEGIN
     WRITELN bar
   END;
 
+  if bar then
+    if not bar then writeln -1 else writeln 44;
+
   if 1 then
   begin
     i := 0;
