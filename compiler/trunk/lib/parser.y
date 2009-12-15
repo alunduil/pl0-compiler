@@ -568,7 +568,7 @@ procedure_statement:
             %>
 
             /** Parameter list handling. */
-            std::queue<Environment::TOKEN_TYPE> tmp = entry->GetParameterList();
+            std::queue<Environment::SymbolTableEntry> tmp = entry->GetParameterList();
 
             int nparams = param_list.size();
             if (tmp.size() != param_list.size())
@@ -578,12 +578,9 @@ procedure_statement:
             %>
             for (; !param_list.empty() && !tmp.empty(); param_list.pop(), tmp.pop())
             <%
-            #ifndef NDEBUG
-                DEBUG(Environment::REAL);
-                DEBUG(tmp.front());
-                DEBUG(param_list.front());
-            #endif
-                if (tmp.front() != param_list.front())
+                if ((tmp.front().GetIdentifierType() & Environment::ARRAY_ID) == Environment::ARRAY_ID)
+                    nparams += tmp.front().GetSize() - 1;
+                if (tmp.front().GetType() != param_list.front())
                 <%
                     yyerror(filename, 0, "cannot convert a parameter's type to the necessary type");
                     /** @todo Make this recover a little better and say more ... */
@@ -847,6 +844,9 @@ factor:
             $$ = entry->GetType();
 
             output_code->Push(new Generator::Instruction("lod", level, entry->GetOffSet()));
+            if ((entry->GetIdentifierType() & Environment::ARRAY_ID) == Environment::ARRAY_ID)
+                for (int i = entry->GetOffSet() + 1; i < entry->GetOffSet() + entry->GetSize(); ++i)
+                    output_code->Push(new Generator::Instruction("lod", level, i));
         }
     | ID '[' expression ']'
         {
@@ -899,7 +899,7 @@ factor:
             %>
 
             /** Parameter list handling. */
-            std::queue<Environment::TOKEN_TYPE> tmp = entry->GetParameterList();
+            std::queue<Environment::SymbolTableEntry> tmp = entry->GetParameterList();
 
             int nparams = param_list.size();
             if (tmp.size() != param_list.size())
@@ -909,12 +909,9 @@ factor:
             %>
             for (; !param_list.empty() && !tmp.empty(); param_list.pop(), tmp.pop())
             <%
-            #ifndef NDEBUG
-                DEBUG(Environment::REAL);
-                DEBUG(tmp.front());
-                DEBUG(param_list.front());
-            #endif
-                if (tmp.front() != param_list.front())
+                if ((tmp.front().GetIdentifierType() & Environment::ARRAY_ID) == Environment::ARRAY_ID)
+                    nparams += tmp.front().GetSize() - 1;
+                if (tmp.front().GetType() != param_list.front())
                 <%
                     yyerror(filename, 0, "cannot convert a parameter's type to the necessary type");
                     /** @todo Make this recover a little better and say more ... */
