@@ -39,9 +39,9 @@ namespace Environment
             this->tables.pop_back();
     }
 
-    int SymbolTable::Count() const
+    int SymbolTable::Count(bool setaddresses) const
     {
-        return this->tables.back()->Count();
+        return this->tables.back()->Count(setaddresses);
     }
 
     SymbolTableEntry * SymbolTable::Find(const SymbolTableEntry & entry, int & level)
@@ -118,13 +118,16 @@ namespace Environment
         return &entry;
     };
 
-    int SymbolTable::InternalSymbolTable::Count()
+    int SymbolTable::InternalSymbolTable::Count(bool readdress)
     {
-        this->count = 3;
-        for (std::map<std::string, SymbolTableEntry *>::iterator i = this->table.begin(); i != this->table.end(); ++i)
+        if (readdress)
         {
-            i->second->SetOffSet(this->count);
-            this->count += ((i->second->GetIdentifierType() & ARRAY_ID) == ARRAY_ID) ? i->second->GetSize() : 1;
+            this->count = 3;
+            for (std::map<std::string, SymbolTableEntry *>::iterator i = this->table.begin(); i != this->table.end(); ++i)
+            {
+                i->second->SetOffSet(this->count);
+                this->count += ((i->second->GetIdentifierType() & ARRAY_ID) == ARRAY_ID) ? i->second->GetSize() : 1;
+            }
         }
         return this->count;
     }
