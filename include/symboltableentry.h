@@ -214,7 +214,7 @@ namespace Environment
              * @brief Get the parameter list for a function or procedure.
              * @return The list of parameters.
              */
-            std::queue<TOKEN_TYPE> GetParameterList();
+            std::queue<SymbolTableEntry> GetParameterList();
 
         protected:
             /**

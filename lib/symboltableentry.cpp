@@ -58,11 +58,11 @@ namespace Environment
         this->param_list.push_back(param);
     }
 
-    std::queue<TOKEN_TYPE> SymbolTableEntry::GetParameterList()
+    std::queue<SymbolTableEntry> SymbolTableEntry::GetParameterList()
     {
-        std::queue<TOKEN_TYPE> ret;
+        std::queue<SymbolTableEntry> ret;
         for (std::list<SymbolTableEntry>::iterator i = this->param_list.begin(); i != this->param_list.end(); ++i)
-            ret.push(i->GetType());
+            ret.push(*i);
         return ret;
     }
 
