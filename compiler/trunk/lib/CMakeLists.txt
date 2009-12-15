@@ -15,12 +15,10 @@ endif()
 flex_target(scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp COMPILE_FLAGS ${FLEX_scanner_FLAGS})
 add_flex_bison_dependency(scanner parser)
 
-add_library(environment symboltable.cpp symboltableentry.cpp)
+add_library(environment symboltable.cpp symboltableentry.cpp ${BISON_TARGET_output_header})
 add_library(analyzer ${BISON_parser_OUTPUTS} ${FLEX_scanner_OUTPUTS})
 add_library(generator instruction.cpp programstore.cpp)
 add_library(compiler compiler.cpp)
-
-add_dependencies(environment parser)
 
 target_link_libraries(analyzer generator environment)
 target_link_libraries(compiler analyzer)

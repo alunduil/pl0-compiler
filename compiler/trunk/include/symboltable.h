@@ -49,9 +49,10 @@ namespace Environment
 
             /**
              * @brief Count of elements in top level.
+             * @param setaddresses Whether or not to reset the addresses.
              * @return The count of elements in the top level.
              */
-            int Count() const;
+            int Count(bool setaddresses = false) const;
 
             /**
              * @brief Find an entry in the table based on the lexeme.
@@ -162,9 +163,10 @@ namespace Environment
 
                     /**
                      * @brief Count of elements in table.
+                     * @param readdress Whether or not to reset the addresses of variables.
                      * @return The number of elements at this level.
                      */
-                    int Count();
+                    int Count(bool readdress = false);
 
                     /**
                     * @brief Find an entry in the table based on the lexeme.

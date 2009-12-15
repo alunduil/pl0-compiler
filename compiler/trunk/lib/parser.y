@@ -12,9 +12,9 @@
     #include <boost/lexical_cast.hpp>
 
     #include <output.h>
-    #include <symboltableentry.h>
-    #include <symboltable.h>
     #include <programstore.h>
+    #include <symboltable.h>
+    #include <symboltableentry.h>
     #include <instruction.h>
 }
 
@@ -126,7 +126,7 @@
 program:
     PROGRAM ID
         {
-            table->Insert(std::string(*$2) + std::string("r"))->SetIdentifierType(Environment::RETURN_ID);
+            table->Insert(std::string("zzzzzzzz") + std::string(*$2))->SetIdentifierType(Environment::RETURN_ID);
         }
     '(' ')' ';'
         {
@@ -139,7 +139,7 @@ program:
              * HACK If this works then I need to fix offsets if I get time ...
              * Not sure if this contributes or allays the return passing problems ...
              */
-            table->Count();
+            table->Count(true);
         }
     subprogram_declarations
         {
@@ -238,7 +238,11 @@ subprogram_declaration:
             output_code->Mark(); // Mark the increment.
             output_code->Push(new Generator::Instruction("int", 0, 3));
         }
-    declarations subprogram_declarations
+    declarations
+        {
+            table->Count(true);
+        }
+    subprogram_declarations
         {
             (*output_code)[output_code->GetMark()].SetAddress(table->Count()); // Backpatch the increment.
             #ifndef NDEBUG
@@ -259,12 +263,14 @@ subprogram_head:
             callable->SetType($5);
             callable->SetIdentifierType(Environment::FUNC_ID);
             callable->SetAddress(output_code->TopAddress() + 1);
+            table->Insert(std::string("zzzzzzzz") + callable->GetLexeme())->SetIdentifierType(Environment::RETURN_ID);
             callable = NULL;
         }
     | PROCEDURE call_id arguments ';'
         {
             callable->SetIdentifierType(Environment::PROC_ID);
             callable->SetAddress(output_code->TopAddress() + 1);
+            table->Insert(std::string("zzzzzzzz") + callable->GetLexeme())->SetIdentifierType(Environment::RETURN_ID);
             callable = NULL;
         }
     ;
@@ -280,7 +286,6 @@ call_id:
             %>
             callable = table->Insert(*$1);
             table->Push();
-            table->Insert(std::string(*$1) + std::string("r"))->SetIdentifierType(Environment::RETURN_ID);
         }
     ;
 
@@ -328,7 +333,7 @@ statement:
             DEBUG(Environment::FUNC_ID);
             #endif
 
-            if (($1->GetIdentifierType() & Environment::FUNC_ID) == Environment::FUNC_ID && !table->Find(std::string($1->GetLexeme()) + std::string("r"), level)) // Don't assign to another function's return value.
+            if (($1->GetIdentifierType() & Environment::FUNC_ID) == Environment::FUNC_ID && !table->Find(std::string("zzzzzzzz") + std::string($1->GetLexeme()), level)) // Don't assign to another function's return value.
             <%
                 yyerror(filename, 0, "Can only assign a return value to this function!  Not another function!");
                 YYERROR;
@@ -379,7 +384,7 @@ statement:
 
             /** Interestingly numbers get messed up at lower levels ... or ... not ... WTF! */
             if (($1->GetIdentifierType() & Environment::ARRAY_ID) != Environment::ARRAY_ID)
-                output_code->Push(new Generator::Instruction("sto", level, $1->GetOffSet() - ((($1->GetIdentifierType() & Environment::FUNC_ID) == Environment::FUNC_ID) ? level : 0)));
+                output_code->Push(new Generator::Instruction("sto", level, $1->GetOffSet()));
             else
                 output_code->Push(new Generator::Instruction("sar", level, $1->GetOffSet()));
         }
@@ -471,7 +476,7 @@ statement:
                     break;
             };
 
-            if ($2->GetIdentifierType() & Environment::FUNC_ID == Environment::FUNC_ID && !table->Find(std::string($2->GetLexeme()) + std::string("r"), level))
+            if ($2->GetIdentifierType() & Environment::FUNC_ID == Environment::FUNC_ID && !table->Find(std::string("zzzzzzzz") + std::string($2->GetLexeme()), level))
             <%
                 yyerror(filename, 0, "Cannot read into a return value for a function!");
                 YYERROR;

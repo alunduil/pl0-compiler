@@ -15,7 +15,7 @@
 %option batch
 %option caseless
 
-identifier          [[:alpha:]][[:alnum:]]*
+identifier          [[:alpha:]]([[:alpha:]]|[[:digit:]])*
 digits              [[:digit:]]+
 optional_fraction   (\.{digits})
 optional_exponent   (E(\+|-)?{digits})
@@ -30,7 +30,7 @@ r_num               ({digits}{optional_fraction}?{optional_exponent}?|{digits}?{
 
 <comment>\} { BEGIN(INITIAL); }
 
-<comment>([^\n\}<<EOF>>]|e|o|f)+ { /* empty */ }
+<comment>([^\n\}<<EOF>>]|e|o|f|\<)+ { /* empty */ }
 
 <*>[\n] { /* empty */ }
 
