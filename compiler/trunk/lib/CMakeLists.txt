@@ -20,5 +20,7 @@ add_library(analyzer ${BISON_parser_OUTPUTS} ${FLEX_scanner_OUTPUTS})
 add_library(generator instruction.cpp programstore.cpp)
 add_library(compiler compiler.cpp)
 
+set_source_files_properties(symboltable.cpp symboltableentry.cpp PROPERTIES OBJECT_DEPENDS ${BISON_parser_OUTPUT_HEADER})
+
 target_link_libraries(analyzer generator environment)
 target_link_libraries(compiler analyzer)

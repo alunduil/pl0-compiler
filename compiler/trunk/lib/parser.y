@@ -843,6 +843,11 @@ factor:
 
             $$ = entry->GetType();
 
+            if ((entry->GetIdentifierType() & Environment::FUNC_ID) == Environment::FUNC_ID)
+            <%
+                output_code->Push(new Generator::Instruction("cal", level, entry->GetAddress()));
+            %>
+
             output_code->Push(new Generator::Instruction("lod", level, entry->GetOffSet()));
             if ((entry->GetIdentifierType() & Environment::ARRAY_ID) == Environment::ARRAY_ID)
                 for (int i = entry->GetOffSet() + 1; i < entry->GetOffSet() + entry->GetSize(); ++i)
